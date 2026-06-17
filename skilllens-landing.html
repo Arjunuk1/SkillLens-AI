@@ -8,606 +8,1318 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════════
+   CSS VARIABLES & RESET
+═══════════════════════════════════════════════════ */
 :root{
-  --bg:#0a0a12;
-  --bg2:#0e0e1a;
-  --bg3:#13131f;
-  --blue:#3B82F6;
-  --purple:#8B5CF6;
-  --cyan:#06B6D4;
-  --blue-dim:rgba(59,130,246,0.15);
-  --purple-dim:rgba(139,92,246,0.15);
-  --cyan-dim:rgba(6,182,212,0.12);
+  --bg:#0a0a12; --bg2:#0e0e1a; --bg3:#13131f;
+  --blue:#3B82F6; --purple:#8B5CF6; --cyan:#06B6D4;
   --border:rgba(255,255,255,0.08);
-  --border-hover:rgba(139,92,246,0.4);
-  --text:rgba(255,255,255,0.9);
+  --border-h:rgba(139,92,246,0.45);
+  --text:rgba(255,255,255,0.92);
   --muted:rgba(255,255,255,0.45);
-  --card-bg:rgba(255,255,255,0.04);
-  --glass:rgba(14,14,26,0.85);
+  --card:rgba(255,255,255,0.04);
+  --glass:rgba(12,12,22,0.96);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6}
 
-/* ─── CANVAS ─── */
-#particles-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+/* ═══════════════════════════════════════════════════
+   LOADER
+═══════════════════════════════════════════════════ */
+#loader{
+  position:fixed;inset:0;z-index:9999;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .6s ease, visibility .6s ease;
+}
+#loader.hide{opacity:0;visibility:hidden;pointer-events:none}
+.ld-wrap{display:flex;flex-direction:column;align-items:center;gap:0}
+.ld-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.ld-icon{
+  width:48px;height:48px;border-radius:13px;
+  background:linear-gradient(135deg,#6c5ce7,#00b4d8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800;color:#fff;
+  animation:ld-pulse 1.6s ease-in-out infinite;
+}
+@keyframes ld-pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(108,92,231,.55),0 0 0 0 rgba(0,180,216,.3)}
+  50%{box-shadow:0 0 0 16px rgba(108,92,231,0),0 0 0 10px rgba(0,180,216,0)}
+}
+.ld-name{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.ld-name span{background:linear-gradient(135deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ld-bar{width:220px;height:2px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;margin-top:6px}
+.ld-fill{height:100%;background:linear-gradient(90deg,#6c5ce7,#00b4d8);border-radius:2px;animation:ld-fill 1.85s ease-in-out forwards}
+@keyframes ld-fill{0%{width:0%}100%{width:100%}}
+.ld-txt{font-size:12px;color:var(--muted);margin-top:14px;letter-spacing:.02em}
 
-/* ─── BLOBS ─── */
-.blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:0.12;pointer-events:none;z-index:0}
-.b1{width:600px;height:600px;background:#6c5ce7;top:-150px;left:-150px;animation:blob1 10s ease-in-out infinite}
-.b2{width:500px;height:500px;background:#00b4d8;top:300px;right:-120px;animation:blob2 13s ease-in-out infinite}
-.b3{width:400px;height:400px;background:#a855f7;bottom:100px;left:20%;animation:blob3 15s ease-in-out infinite}
-@keyframes blob1{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,50px)}}
-@keyframes blob2{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,30px)}}
-@keyframes blob3{0%,100%{transform:translate(0,0)}50%{transform:translate(25px,-35px)}}
+/* ═══════════════════════════════════════════════════
+   CURSOR GLOW
+═══════════════════════════════════════════════════ */
+#cursor-glow{
+  position:fixed;width:480px;height:480px;border-radius:50%;
+  pointer-events:none;z-index:1;
+  background:radial-gradient(circle,rgba(108,92,231,.065) 0%,transparent 68%);
+  transform:translate(-50%,-50%);
+  transition:opacity .35s ease;opacity:0;top:0;left:0;
+}
 
-/* ─── NAVBAR ─── */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 48px;background:rgba(10,10,18,0.7);backdrop-filter:blur(16px);border-bottom:0.5px solid var(--border);transition:background 0.3s}
-.nav-logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;text-decoration:none;color:#fff}
-.logo-mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#6c5ce7,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
-.nav-links{display:flex;align-items:center;gap:32px;font-size:13px;color:var(--muted)}
-.nav-links a{color:var(--muted);text-decoration:none;transition:color 0.2s}
-.nav-links a:hover{color:#fff}
-.nav-actions{display:flex;align-items:center;gap:10px}
-.btn-ghost{padding:8px 18px;border-radius:9px;border:0.5px solid rgba(255,255,255,0.18);background:transparent;color:rgba(255,255,255,0.75);font-size:13px;font-family:inherit;cursor:pointer;transition:all 0.2s}
-.btn-ghost:hover{background:rgba(255,255,255,0.07);color:#fff}
-.btn-primary{padding:8px 18px;border-radius:9px;border:none;background:linear-gradient(135deg,#6c5ce7,#5a4fd4);color:#fff;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600;transition:all 0.2s}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(108,92,231,0.45)}
+/* ═══════════════════════════════════════════════════
+   PARTICLES CANVAS & BLOBS
+═══════════════════════════════════════════════════ */
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+.blob{position:fixed;border-radius:50%;filter:blur(100px);opacity:.10;pointer-events:none;z-index:0}
+.b1{width:640px;height:640px;background:#6c5ce7;top:-180px;left:-180px;animation:blob1 11s ease-in-out infinite}
+.b2{width:520px;height:520px;background:#00b4d8;top:340px;right:-150px;animation:blob2 14s ease-in-out infinite}
+.b3{width:440px;height:440px;background:#a855f7;bottom:60px;left:24%;animation:blob3 17s ease-in-out infinite}
+@keyframes blob1{0%,100%{transform:translate(0,0)}50%{transform:translate(48px,58px)}}
+@keyframes blob2{0%,100%{transform:translate(0,0)}50%{transform:translate(-58px,34px)}}
+@keyframes blob3{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-40px)}}
 
-/* ─── MODAL ─── */
-.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s}
+/* ═══════════════════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 52px;
+  background:rgba(10,10,18,.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:.5px solid var(--border);transition:all .3s;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;text-decoration:none;color:#fff;letter-spacing:-.01em}
+.nav-mark{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,#6c5ce7,#00b4d8);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;
+}
+.nav-links{display:flex;align-items:center;gap:32px;font-size:13px;font-weight:500}
+.nav-links a{color:var(--muted);text-decoration:none;transition:color .2s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1.5px;background:#8B5CF6;transition:width .25s;border-radius:1px}
+.nav-links a:hover{color:#fff}.nav-links a:hover::after{width:100%}
+.nav-btns{display:flex;align-items:center;gap:10px}
+.btn-nav-ghost{
+  padding:8px 20px;border-radius:10px;
+  border:.5px solid rgba(255,255,255,.18);background:transparent;
+  color:rgba(255,255,255,.78);font-size:13px;font-family:inherit;font-weight:500;
+  cursor:pointer;transition:all .2s;
+}
+.btn-nav-ghost:hover{background:rgba(255,255,255,.07);color:#fff;transform:translateY(-1px)}
+.btn-nav-primary{
+  padding:8px 20px;border-radius:10px;border:none;
+  background:linear-gradient(135deg,#6c5ce7,#5a4fd4);color:#fff;
+  font-size:13px;font-family:inherit;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.btn-nav-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(108,92,231,.5)}
+
+/* ═══════════════════════════════════════════════════
+   MODAL SYSTEM — FULLY FIXED
+═══════════════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.70);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s ease;
+}
 .modal-overlay.open{opacity:1;pointer-events:all}
-.modal{background:rgba(14,14,26,0.92);border:0.5px solid rgba(139,92,246,0.3);border-radius:20px;padding:36px;width:100%;max-width:420px;backdrop-filter:blur(24px);transform:translateY(20px) scale(0.97);transition:transform 0.25s,opacity 0.25s;opacity:0;position:relative}
-.modal-overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
-.modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.07);border:none;color:var(--muted);font-size:18px;width:30px;height:30px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
-.modal-close:hover{background:rgba(255,255,255,0.12);color:#fff}
-.modal h2{font-size:22px;font-weight:700;margin-bottom:4px}
-.modal .modal-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
-.modal-field{margin-bottom:16px}
-.modal-field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500;letter-spacing:0.03em}
-.modal-field input{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s}
-.modal-field input:focus{border-color:rgba(108,92,231,0.6)}
-.modal-field input::placeholder{color:rgba(255,255,255,0.25)}
-.btn-modal-submit{width:100%;padding:13px;background:linear-gradient(135deg,#6c5ce7,#5a4fd4);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px;transition:all 0.2s}
-.btn-modal-submit:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(108,92,231,0.45)}
-.modal-switch{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
-.modal-switch span{color:#93c5fd;cursor:pointer}
-.modal-switch span:hover{text-decoration:underline}
-.modal-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--muted);font-size:12px}
-.modal-divider::before,.modal-divider::after{content:'';flex:1;height:0.5px;background:rgba(255,255,255,0.1)}
-.modal-ai-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(108,92,231,0.1);border:0.5px solid rgba(108,92,231,0.25);border-radius:10px;font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:24px}
-.modal-ai-badge svg{flex-shrink:0}
+.modal-box{
+  background:var(--glass);
+  border:.5px solid rgba(139,92,246,.38);
+  border-radius:24px;padding:38px 36px;
+  width:100%;max-width:450px;
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  box-shadow:0 40px 100px rgba(0,0,0,.55), 0 0 0 .5px rgba(139,92,246,.18);
+  transform:translateY(28px) scale(.96);opacity:0;
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1), opacity .28s ease;
+  position:relative;
+  max-height:92vh;overflow-y:auto;
+}
+.modal-box::-webkit-scrollbar{width:4px}
+.modal-box::-webkit-scrollbar-thumb{background:rgba(139,92,246,.3);border-radius:2px}
+.modal-overlay.open .modal-box{transform:translateY(0) scale(1);opacity:1}
+.modal-signup-box{max-width:500px}
+.modal-close-btn{
+  position:absolute;top:16px;right:16px;
+  width:34px;height:34px;border-radius:9px;
+  background:rgba(255,255,255,.07);border:none;
+  color:var(--muted);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .22s;line-height:1;
+}
+.modal-close-btn:hover{background:rgba(255,255,255,.14);color:#fff;transform:rotate(90deg)}
+.modal-badge{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 13px;
+  background:rgba(108,92,231,.1);border:.5px solid rgba(108,92,231,.3);
+  border-radius:10px;font-size:12px;color:rgba(255,255,255,.62);
+  margin-bottom:22px;
+}
+.modal-badge svg{flex-shrink:0}
+.modal-title{font-size:22px;font-weight:800;margin-bottom:5px;letter-spacing:-.015em}
+.modal-subtitle{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
 
-/* ─── SECTIONS WRAPPER ─── */
-main{position:relative;z-index:1}
+/* Alert banner inside modal */
+.modal-alert{
+  display:none;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:10px;
+  font-size:13px;font-weight:500;margin-bottom:16px;
+  line-height:1.4;
+}
+.modal-alert.show{display:flex}
+.modal-alert.success{background:rgba(52,211,153,.12);border:.5px solid rgba(52,211,153,.35);color:#34d399}
+.modal-alert.error{background:rgba(239,68,68,.1);border:.5px solid rgba(239,68,68,.35);color:#f87171}
 
-/* ─── HERO ─── */
-.hero{text-align:center;padding:160px 48px 80px;max-width:900px;margin:0 auto}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:20px;border:0.5px solid rgba(108,92,231,0.4);background:rgba(108,92,231,0.1);font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:30px;animation:fadeUp 0.6s ease both}
-.hero-badge-pulse{width:7px;height:7px;border-radius:50%;background:#8B5CF6;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.75)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.hero h1{font-size:58px;font-weight:800;line-height:1.12;margin-bottom:22px;animation:fadeUp 0.7s 0.1s ease both;letter-spacing:-0.02em}
-.hero h1 em{font-style:normal;background:linear-gradient(135deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-sub{font-size:18px;color:var(--muted);line-height:1.65;max-width:560px;margin:0 auto 40px;animation:fadeUp 0.7s 0.2s ease both}
-.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:fadeUp 0.7s 0.3s ease both}
-.btn-hero{padding:14px 30px;border-radius:11px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:9px}
-.btn-hero-cta{background:linear-gradient(135deg,#6c5ce7,#5a4fd4);border:none;color:#fff}
-.btn-hero-cta:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(108,92,231,0.45)}
-.btn-hero-outline{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);backdrop-filter:blur(8px)}
-.btn-hero-outline:hover{background:rgba(255,255,255,0.09);border-color:rgba(255,255,255,0.35)}
-.hero-stats{display:flex;gap:48px;justify-content:center;margin-top:56px;animation:fadeUp 0.7s 0.4s ease both}
-.stat{text-align:center}
-.stat-num{font-size:26px;font-weight:800;background:linear-gradient(135deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:3px}
-.stat-label{font-size:12px;color:var(--muted);font-weight:500}
+/* Form grid */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-field{margin-bottom:14px}
+.form-field label{
+  display:block;font-size:11px;color:rgba(255,255,255,.42);
+  margin-bottom:6px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+}
+.form-field input,
+.form-field select{
+  width:100%;padding:11px 14px;
+  background:rgba(255,255,255,.055);
+  border:.5px solid rgba(255,255,255,.1);border-radius:11px;
+  color:#fff;font-size:14px;font-family:inherit;
+  outline:none;transition:all .22s;
+  -webkit-appearance:none;appearance:none;
+}
+.form-field select option{background:#1a1a2e;color:#fff}
+.form-field input:focus,
+.form-field select:focus{
+  border-color:rgba(108,92,231,.7);
+  background:rgba(108,92,231,.08);
+  box-shadow:0 0 0 3px rgba(108,92,231,.14);
+}
+.form-field input.invalid{border-color:rgba(239,68,68,.65) !important;background:rgba(239,68,68,.06) !important}
+.form-field input::placeholder{color:rgba(255,255,255,.2)}
+.field-error{font-size:11px;color:#f87171;margin-top:5px;display:none}
+.field-error.visible{display:block}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:42px}
+.pass-eye{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  padding:4px;font-size:14px;transition:color .2s;
+}
+.pass-eye:hover{color:#fff}
+.pass-strength-bar{height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:6px;overflow:hidden}
+.pass-strength-fill{height:100%;border-radius:2px;transition:width .3s ease,background .3s ease;width:0}
+.pass-strength-label{font-size:10px;color:var(--muted);margin-top:4px}
 
-/* ─── SECTION SHARED ─── */
-section{padding:80px 48px;max-width:1100px;margin:0 auto}
-.section-eyebrow{font-size:12px;font-weight:600;color:#8B5CF6;letter-spacing:0.12em;text-transform:uppercase;text-align:center;margin-bottom:10px}
-.section-title{font-size:34px;font-weight:800;text-align:center;margin-bottom:14px;letter-spacing:-0.01em}
-.section-sub{font-size:16px;color:var(--muted);text-align:center;max-width:540px;margin:0 auto 52px;line-height:1.6}
+/* Submit button */
+.btn-submit{
+  width:100%;padding:13px;margin-top:6px;
+  background:linear-gradient(135deg,#6c5ce7,#5a4fd4);
+  border:none;border-radius:12px;
+  color:#fff;font-size:14px;font-weight:700;font-family:inherit;
+  cursor:pointer;transition:all .22s;
+  position:relative;overflow:hidden;
+}
+.btn-submit::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.btn-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 36px rgba(108,92,231,.52)}
+.btn-submit:hover::before{opacity:1}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none !important;box-shadow:none !important}
+.btn-submit .btn-text{display:inline-block}
+.btn-submit .btn-spinner{
+  display:none;width:18px;height:18px;
+  border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .75s linear infinite;margin:0 auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-submit.loading .btn-text{display:none}
+.btn-submit.loading .btn-spinner{display:block}
 
-/* ─── FEATURES ─── */
+.modal-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:12px}
+.modal-divider::before,.modal-divider::after{content:'';flex:1;height:.5px;background:rgba(255,255,255,.09)}
+.modal-switch{text-align:center;font-size:13px;color:var(--muted)}
+.modal-switch a{color:#93c5fd;cursor:pointer;font-weight:600;text-decoration:none}
+.modal-switch a:hover{text-decoration:underline}
+
+/* ═══════════════════════════════════════════════════
+   TOAST NOTIFICATION
+═══════════════════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:30px;right:30px;z-index:600;
+  padding:13px 20px;border-radius:14px;font-size:13px;font-weight:600;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  transform:translateY(24px);opacity:0;
+  transition:all .3s ease;pointer-events:none;
+  max-width:340px;display:flex;align-items:center;gap:8px;
+}
+#toast.show{opacity:1;transform:translateY(0);pointer-events:all}
+#toast.success{background:rgba(52,211,153,.15);border:.5px solid rgba(52,211,153,.45);color:#34d399}
+#toast.error{background:rgba(239,68,68,.13);border:.5px solid rgba(239,68,68,.42);color:#f87171}
+#toast.info{background:rgba(59,130,246,.13);border:.5px solid rgba(59,130,246,.42);color:#93c5fd}
+
+/* ═══════════════════════════════════════════════════
+   MAIN / SECTIONS
+═══════════════════════════════════════════════════ */
+main{position:relative;z-index:2}
+.section-wrap{padding:80px 52px;max-width:1120px;margin:0 auto}
+.eyebrow{font-size:11px;font-weight:700;color:#8B5CF6;letter-spacing:.14em;text-transform:uppercase;text-align:center;margin-bottom:10px}
+.section-title{font-size:34px;font-weight:800;text-align:center;margin-bottom:14px;letter-spacing:-.018em;line-height:1.2}
+.section-sub{font-size:16px;color:var(--muted);text-align:center;max-width:540px;margin:0 auto 52px;line-height:1.65}
+
+/* ═══════════════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════════════ */
+.hero{text-align:center;padding:172px 52px 90px;max-width:940px;margin:0 auto}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 18px;border-radius:22px;
+  border:.5px solid rgba(108,92,231,.44);background:rgba(108,92,231,.1);
+  font-size:12px;color:rgba(255,255,255,.72);font-weight:500;
+  margin-bottom:34px;animation:fadeUp .6s ease both;
+}
+.badge-dot{width:7px;height:7px;border-radius:50%;background:#8B5CF6;animation:pulseDot 2s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.72)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hero h1{font-size:60px;font-weight:800;line-height:1.1;margin-bottom:24px;animation:fadeUp .7s .1s ease both;letter-spacing:-.028em}
+.hero h1 .grad{font-style:normal;background:linear-gradient(135deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:18px;color:var(--muted);line-height:1.68;max-width:560px;margin:0 auto 44px;animation:fadeUp .7s .2s ease both}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:fadeUp .7s .3s ease both}
+.btn-cta{
+  padding:14px 32px;border-radius:13px;font-size:15px;font-weight:700;
+  font-family:inherit;cursor:pointer;transition:all .22s;
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#6c5ce7,#5a4fd4);border:none;color:#fff;
+}
+.btn-cta:hover{transform:translateY(-3px);box-shadow:0 14px 44px rgba(108,92,231,.52)}
+.btn-outline{
+  padding:14px 32px;border-radius:13px;font-size:15px;font-weight:700;
+  font-family:inherit;cursor:pointer;transition:all .22s;
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.045);border:.5px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.84);backdrop-filter:blur(8px);
+}
+.btn-outline:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.35);transform:translateY(-2px)}
+.hero-stats{display:flex;gap:56px;justify-content:center;margin-top:64px;animation:fadeUp .7s .4s ease both;flex-wrap:wrap}
+.stat-num{font-size:28px;font-weight:800;background:linear-gradient(135deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;min-height:34px}
+.stat-lbl{font-size:12px;color:var(--muted);font-weight:500}
+
+/* ═══════════════════════════════════════════════════
+   FEATURE CARDS
+═══════════════════════════════════════════════════ */
 .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.feature-card{background:var(--card-bg);border:0.5px solid var(--border);border-radius:18px;padding:28px;backdrop-filter:blur(16px);transition:all 0.25s;cursor:default;position:relative;overflow:hidden}
-.feature-card::before{content:'';position:absolute;inset:0;border-radius:18px;background:linear-gradient(135deg,rgba(108,92,231,0.08),transparent);opacity:0;transition:opacity 0.3s}
-.feature-card:hover{border-color:var(--border-hover);transform:translateY(-4px)}
-.feature-card:hover::before{opacity:1}
-.fc-icon{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:22px}
-.fc-blue{background:rgba(59,130,246,0.15);color:#60a5fa}
-.fc-purple{background:rgba(139,92,246,0.18);color:#a78bfa}
-.fc-cyan{background:rgba(6,182,212,0.14);color:#22d3ee}
-.fc-pink{background:rgba(236,72,153,0.14);color:#f472b6}
-.fc-green{background:rgba(52,211,153,0.14);color:#34d399}
-.fc-amber{background:rgba(251,191,36,0.14);color:#fbbf24}
-.feature-card h3{font-size:16px;font-weight:700;margin-bottom:8px}
-.feature-card p{font-size:13px;color:var(--muted);line-height:1.6}
-.feature-card .fc-tag{display:inline-block;margin-top:14px;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:600;color:rgba(139,92,246,0.9);background:rgba(139,92,246,0.1);border:0.5px solid rgba(139,92,246,0.25)}
+.feature-card{
+  background:var(--card);border:.5px solid var(--border);border-radius:20px;
+  padding:30px;position:relative;overflow:hidden;
+  transition:all .28s ease;cursor:default;
+}
+.feature-card::after{
+  content:'';position:absolute;inset:0;border-radius:20px;
+  background:linear-gradient(135deg,rgba(108,92,231,.1),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.feature-card:hover{border-color:var(--border-h);transform:translateY(-6px);box-shadow:0 20px 56px rgba(108,92,231,.14)}
+.feature-card:hover::after{opacity:1}
+.fc-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;position:relative;z-index:1}
+.ic-blue{background:rgba(59,130,246,.16);color:#60a5fa}
+.ic-purple{background:rgba(139,92,246,.18);color:#a78bfa}
+.ic-cyan{background:rgba(6,182,212,.15);color:#22d3ee}
+.ic-pink{background:rgba(236,72,153,.15);color:#f472b6}
+.ic-green{background:rgba(52,211,153,.15);color:#34d399}
+.ic-amber{background:rgba(251,191,36,.15);color:#fbbf24}
+.feature-card h3{font-size:16px;font-weight:700;margin-bottom:9px;position:relative;z-index:1}
+.feature-card p{font-size:13px;color:var(--muted);line-height:1.62;position:relative;z-index:1}
+.fc-tag{display:inline-block;margin-top:16px;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;color:rgba(139,92,246,.95);background:rgba(139,92,246,.1);border:.5px solid rgba(139,92,246,.3);position:relative;z-index:1}
 
-/* ─── DASHBOARD PREVIEW ─── */
-.dash-preview{background:var(--bg2);border-radius:24px;border:0.5px solid var(--border);overflow:hidden;margin-top:0}
-.dash-preview-top{background:rgba(255,255,255,0.03);border-bottom:0.5px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:8px}
-.dot{width:10px;height:10px;border-radius:50%}
-.dot-r{background:#ff5f57}.dot-y{background:#febc2e}.dot-g{background:#28c840}
-.dash-preview-label{margin-left:12px;font-size:12px;color:var(--muted);}
-.dash-inner{padding:28px 24px}
-.dash-welcome{font-size:17px;font-weight:700;margin-bottom:4px}
-.dash-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
-.dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
-.ds-card{background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:14px;padding:18px}
-.ds-icon{font-size:18px;margin-bottom:8px}
-.ds-val{font-size:26px;font-weight:800;margin-bottom:2px}
-.ds-lbl{font-size:11px;color:var(--muted);font-weight:500}
-.c-blue{color:#60a5fa}.c-purple{color:#a78bfa}.c-green{color:#34d399}.c-amber{color:#fbbf24}
-.dash-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.da-btn{background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:12px;padding:16px;cursor:default}
-.da-btn-icon{font-size:18px;margin-bottom:8px}
-.da-btn-label{font-size:13px;font-weight:600}
-.da-btn-sub{font-size:11px;color:var(--muted);margin-top:2px}
+/* ═══════════════════════════════════════════════════
+   DASHBOARD PREVIEW
+═══════════════════════════════════════════════════ */
+.dash-preview{background:var(--bg2);border-radius:24px;border:.5px solid var(--border);overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.4)}
+.dp-chrome{background:rgba(255,255,255,.03);border-bottom:.5px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:8px}
+.chrome-dot{width:11px;height:11px;border-radius:50%}
+.c-red{background:#ff5f57}.c-yellow{background:#febc2e}.c-green{background:#28c840}
+.chrome-title{margin-left:12px;font-size:12px;color:var(--muted);font-weight:500}
+.dp-body{padding:30px 26px}
+.dp-welcome{font-size:18px;font-weight:700;margin-bottom:5px}
+.dp-tagline{font-size:13px;color:var(--muted);margin-bottom:26px}
+.dp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.dp-stat{background:rgba(255,255,255,.04);border:.5px solid var(--border);border-radius:14px;padding:18px}
+.dp-stat-icon{font-size:19px;margin-bottom:8px}
+.dp-stat-val{font-size:27px;font-weight:800;margin-bottom:3px}
+.c-b{color:#60a5fa}.c-p{color:#a78bfa}.c-g{color:#34d399}.c-a{color:#fbbf24}
+.dp-stat-lbl{font-size:11px;color:var(--muted);font-weight:500}
+.dp-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.dp-action{background:rgba(255,255,255,.04);border:.5px solid var(--border);border-radius:12px;padding:16px}
+.dp-action-icon{font-size:19px;margin-bottom:8px}
+.dp-action-lbl{font-size:13px;font-weight:700}
+.dp-action-sub{font-size:11px;color:var(--muted);margin-top:3px}
 
-/* ─── HOW IT WORKS ─── */
+/* ═══════════════════════════════════════════════════
+   HOW IT WORKS
+═══════════════════════════════════════════════════ */
 .steps-row{display:flex;align-items:flex-start;justify-content:center;gap:0;position:relative}
-.step-item{flex:1;text-align:center;padding:0 20px;position:relative}
-.step-item:not(:last-child)::after{content:'';position:absolute;top:28px;right:-10%;width:40%;height:1px;background:linear-gradient(90deg,rgba(139,92,246,0.5),rgba(59,130,246,0.15))}
-.step-num-wrap{width:56px;height:56px;border-radius:50%;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(108,92,231,0.25),rgba(0,180,216,0.12));border:1px solid rgba(108,92,231,0.4);font-size:20px;position:relative;z-index:2;transition:transform 0.3s}
-.step-item:hover .step-num-wrap{transform:scale(1.08)}
-.step-num-inner{font-size:15px;font-weight:800;color:#a78bfa}
-.step-item h4{font-size:15px;font-weight:700;margin-bottom:6px}
-.step-item p{font-size:13px;color:var(--muted);line-height:1.55}
+.step{flex:1;text-align:center;padding:0 20px;position:relative}
+.step:not(:last-child)::after{
+  content:'';position:absolute;top:28px;right:-8%;width:38%;height:1px;
+  background:linear-gradient(90deg,rgba(139,92,246,.6),rgba(59,130,246,.08));
+}
+.step-circle{
+  width:56px;height:56px;border-radius:50%;margin:0 auto 20px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(108,92,231,.28),rgba(0,180,216,.14));
+  border:1px solid rgba(108,92,231,.45);position:relative;z-index:2;
+  transition:transform .3s ease,box-shadow .3s ease;
+}
+.step:hover .step-circle{transform:scale(1.1);box-shadow:0 0 28px rgba(108,92,231,.35)}
+.step h4{font-size:15px;font-weight:700;margin-bottom:8px}
+.step p{font-size:13px;color:var(--muted);line-height:1.58}
 
-/* ─── FUTURE MODULES ─── */
+/* ═══════════════════════════════════════════════════
+   COMING SOON
+═══════════════════════════════════════════════════ */
 .future-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.future-card{background:var(--card-bg);border:0.5px solid var(--border);border-radius:16px;padding:22px 18px;text-align:center;opacity:0.65;transition:opacity 0.2s;position:relative}
-.future-card:hover{opacity:0.85}
-.future-badge{position:absolute;top:12px;right:12px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:rgba(251,191,36,0.15);color:#fbbf24;border:0.5px solid rgba(251,191,36,0.3)}
-.future-icon{font-size:28px;margin-bottom:12px}
-.future-card h4{font-size:14px;font-weight:700;margin-bottom:5px}
-.future-card p{font-size:12px;color:var(--muted)}
+.future-card{
+  background:var(--card);border:.5px solid var(--border);border-radius:18px;
+  padding:24px 20px;text-align:center;opacity:.58;
+  transition:all .28s ease;position:relative;
+}
+.future-card:hover{opacity:.9;transform:translateY(-3px);border-color:rgba(139,92,246,.3)}
+.future-badge{
+  position:absolute;top:13px;right:13px;padding:2px 9px;border-radius:5px;
+  font-size:10px;font-weight:700;letter-spacing:.04em;
+  background:rgba(251,191,36,.14);color:#fbbf24;border:.5px solid rgba(251,191,36,.32);
+}
+.future-icon{font-size:30px;margin-bottom:13px}
+.future-card h4{font-size:14px;font-weight:700;margin-bottom:6px}
+.future-card p{font-size:12px;color:var(--muted);line-height:1.52}
 
-/* ─── CTA ─── */
-.cta-section{text-align:center;padding:80px 48px;max-width:800px;margin:0 auto}
-.cta-card{background:rgba(108,92,231,0.08);border:0.5px solid rgba(108,92,231,0.3);border-radius:28px;padding:64px 48px;position:relative;overflow:hidden}
-.cta-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(108,92,231,0.18),transparent 70%);pointer-events:none}
-.cta-card h2{font-size:38px;font-weight:800;margin-bottom:14px;letter-spacing:-0.02em}
-.cta-card p{font-size:16px;color:var(--muted);margin-bottom:36px;line-height:1.6}
-.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+/* ═══════════════════════════════════════════════════
+   CTA SECTION
+═══════════════════════════════════════════════════ */
+.cta-section{padding:80px 52px;max-width:840px;margin:0 auto;text-align:center}
+.cta-card{
+  background:rgba(108,92,231,.07);border:.5px solid rgba(108,92,231,.34);
+  border-radius:30px;padding:72px 56px;position:relative;overflow:hidden;
+}
+.cta-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 0%,rgba(108,92,231,.22),transparent 65%);
+}
+.cta-card h2{font-size:40px;font-weight:800;margin-bottom:16px;letter-spacing:-.025em;position:relative}
+.cta-card p{font-size:16px;color:var(--muted);margin-bottom:38px;line-height:1.68;position:relative}
+.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative}
 
-/* ─── FOOTER ─── */
-footer{border-top:0.5px solid var(--border);padding:40px 48px;max-width:1100px;margin:0 auto}
-.footer-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px}
-.footer-brand{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700}
-.footer-links{display:flex;gap:24px;font-size:13px;color:var(--muted)}
-.footer-links a{color:var(--muted);text-decoration:none;transition:color 0.2s}
+/* ═══════════════════════════════════════════════════
+   DEVELOPER SECTION
+═══════════════════════════════════════════════════ */
+.dev-section{padding:80px 52px;max-width:960px;margin:0 auto;text-align:center}
+.dev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.dev-card{
+  background:var(--card);border:.5px solid var(--border);border-radius:22px;
+  padding:32px 26px;text-align:center;transition:all .28s ease;
+  text-decoration:none;color:inherit;display:block;
+  position:relative;overflow:hidden;
+}
+.dev-card::after{content:'';position:absolute;inset:0;border-radius:22px;opacity:0;transition:opacity .3s}
+.dev-card.gh::after{background:linear-gradient(135deg,rgba(139,92,246,.1),transparent)}
+.dev-card.li::after{background:linear-gradient(135deg,rgba(59,130,246,.1),transparent)}
+.dev-card.em::after{background:linear-gradient(135deg,rgba(6,182,212,.1),transparent)}
+.dev-card:hover{transform:translateY(-6px)}
+.dev-card.gh:hover{border-color:rgba(139,92,246,.5);box-shadow:0 20px 56px rgba(139,92,246,.14)}
+.dev-card.li:hover{border-color:rgba(59,130,246,.5);box-shadow:0 20px 56px rgba(59,130,246,.14)}
+.dev-card.em:hover{border-color:rgba(6,182,212,.5);box-shadow:0 20px 56px rgba(6,182,212,.14)}
+.dev-card:hover::after{opacity:1}
+.dev-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative;z-index:1}
+.di-gh{background:rgba(139,92,246,.15);color:#a78bfa}
+.di-li{background:rgba(59,130,246,.15);color:#60a5fa}
+.di-em{background:rgba(6,182,212,.15);color:#22d3ee}
+.dev-card h4{font-size:16px;font-weight:700;margin-bottom:8px;position:relative;z-index:1}
+.dev-card p{font-size:13px;color:var(--muted);line-height:1.58;position:relative;z-index:1}
+.dev-handle{font-size:12px;font-weight:700;margin-top:10px;position:relative;z-index:1}
+.dev-arrow{font-size:12px;color:var(--muted);margin-top:14px;transition:all .22s;display:inline-block;position:relative;z-index:1}
+.dev-card:hover .dev-arrow{transform:translateX(5px);color:#a78bfa}
+
+/* ═══════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════ */
+.footer-wrap{max-width:1120px;margin:0 auto;padding:0 52px}
+footer{border-top:.5px solid var(--border);padding:38px 0}
+.footer-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px}
+.footer-brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800}
+.footer-links{display:flex;gap:26px;font-size:13px}
+.footer-links a{color:var(--muted);text-decoration:none;transition:color .2s;font-weight:500}
 .footer-links a:hover{color:#fff}
-.footer-socials{display:flex;gap:12px}
-.social-btn{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.05);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;text-decoration:none}
-.social-btn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2)}
-.footer-copy{width:100%;text-align:center;font-size:12px;color:rgba(255,255,255,0.2);padding-top:20px;border-top:0.5px solid var(--border);margin-top:8px}
+.footer-socials{display:flex;gap:10px}
+.soc-btn{
+  width:36px;height:36px;border-radius:9px;
+  background:rgba(255,255,255,.055);border:.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .22s;text-decoration:none;
+}
+.soc-btn:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.22);transform:translateY(-2px)}
+.footer-copy{
+  width:100%;text-align:center;font-size:12px;color:rgba(255,255,255,.2);
+  padding-top:22px;border-top:.5px solid var(--border);margin-top:8px;line-height:1.6;
+}
 
-/* ─── ICONS (inline SVG shims) ─── */
-.icon{display:inline-flex;align-items:center;justify-content:center}
+/* ═══════════════════════════════════════════════════
+   SCROLL REVEAL
+═══════════════════════════════════════════════════ */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.08s}
+.reveal-delay-2{transition-delay:.16s}
+.reveal-delay-3{transition-delay:.24s}
+.reveal-delay-4{transition-delay:.32s}
+.reveal-delay-5{transition-delay:.40s}
+.reveal-delay-6{transition-delay:.48s}
 
-@media(max-width:900px){
-  nav{padding:14px 24px}
-  .nav-links{display:none}
-  .hero{padding:130px 24px 60px}
-  .hero h1{font-size:38px}
-  section{padding:60px 24px}
-  .features-grid{grid-template-columns:1fr 1fr}
-  .dash-stats{grid-template-columns:1fr 1fr}
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════ */
+@media(max-width:960px){
+  nav{padding:14px 24px}.nav-links{display:none}
+  .hero{padding:136px 24px 68px}.hero h1{font-size:42px}
+  .section-wrap,.cta-section,.dev-section,.footer-wrap{padding-left:24px;padding-right:24px}
+  .features-grid,.dev-grid{grid-template-columns:1fr 1fr}
+  .dp-stats{grid-template-columns:1fr 1fr}
   .future-grid{grid-template-columns:1fr 1fr}
-  .steps-row{flex-direction:column;align-items:center;gap:32px}
-  .step-item:not(:last-child)::after{display:none}
-  footer{padding:32px 24px}
-  .footer-inner{flex-direction:column;align-items:flex-start}
+  .steps-row{flex-direction:column;align-items:center;gap:36px}
+  .step:not(:last-child)::after{display:none}
+  .footer-row{flex-direction:column;align-items:flex-start}
 }
 @media(max-width:600px){
-  .hero h1{font-size:30px}
+  .hero h1{font-size:32px}
   .features-grid{grid-template-columns:1fr}
-  .dash-stats{grid-template-columns:1fr 1fr}
-  .dash-actions{grid-template-columns:1fr}
+  .dev-grid{grid-template-columns:1fr}
+  .dp-stats{grid-template-columns:1fr 1fr}
+  .dp-actions{grid-template-columns:1fr}
   .future-grid{grid-template-columns:1fr 1fr}
-  .hero-stats{gap:28px}
-  .cta-card{padding:40px 24px}
-  .cta-card h2{font-size:26px}
+  .hero-stats{gap:32px}
+  .cta-card{padding:44px 26px}
+  .cta-card h2{font-size:28px}
+  .modal-box{padding:28px 22px}
+  .form-row{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 
-<!-- Ambient blobs -->
+<!-- ═══ LOADER ═══ -->
+<div id="loader">
+  <div class="ld-wrap">
+    <div class="ld-logo">
+      <div class="ld-icon">SL</div>
+      <div class="ld-name">Skill<span>Lens AI</span></div>
+    </div>
+    <div class="ld-bar"><div class="ld-fill"></div></div>
+    <p class="ld-txt">Preparing your AI interview coach...</p>
+  </div>
+</div>
+
+<!-- ═══ CURSOR GLOW ═══ -->
+<div id="cursor-glow"></div>
+
+<!-- ═══ BACKGROUND ═══ -->
 <div class="blob b1"></div>
 <div class="blob b2"></div>
 <div class="blob b3"></div>
-<canvas id="particles-canvas"></canvas>
+<canvas id="particles"></canvas>
 
-<!-- ── NAVBAR ── -->
+<!-- ═══════════════════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════════════════ -->
 <nav>
   <a href="#" class="nav-logo">
-    <div class="logo-mark">SL</div>
+    <div class="nav-mark">SL</div>
     SkillLens AI
   </a>
   <div class="nav-links">
     <a href="#features">Features</a>
     <a href="#how">How it works</a>
     <a href="#preview">Dashboard</a>
-    <a href="#about">About</a>
+    <a href="#developer">About</a>
   </div>
-  <div class="nav-actions">
-    <button class="btn-ghost" onclick="openModal('login')">Log in</button>
-    <button class="btn-primary" onclick="openModal('signup')">Sign up free</button>
+  <div class="nav-btns">
+    <button class="btn-nav-ghost" id="btn-open-login">Log in</button>
+    <button class="btn-nav-primary" id="btn-open-signup">Sign up free</button>
   </div>
 </nav>
 
-<!-- ── MODALS ── -->
-<div class="modal-overlay" id="modal-login" onclick="overlayClose(event,'modal-login')">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="Log in">
-    <button class="modal-close" onclick="closeModal('modal-login')" aria-label="Close">✕</button>
-    <div class="modal-ai-badge">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+<!-- ═══════════════════════════════════════════════════
+     LOGIN MODAL
+═══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-login" role="dialog" aria-modal="true" aria-labelledby="login-heading">
+  <div class="modal-box">
+    <button class="modal-close-btn" id="close-login" aria-label="Close login modal">✕</button>
+
+    <div class="modal-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
       Your AI interview coach is ready
     </div>
-    <h2>Welcome back</h2>
-    <p class="modal-sub">Sign in to continue your practice journey</p>
-    <div class="modal-field"><label>Email address</label><input type="email" placeholder="you@example.com"></div>
-    <div class="modal-field"><label>Password</label><input type="password" placeholder="••••••••"></div>
-    <button class="btn-modal-submit">Log in to SkillLens AI</button>
-    <p style="text-align:right;margin-top:12px;font-size:12px;color:var(--muted);cursor:pointer">Forgot password?</p>
+
+    <h2 class="modal-title" id="login-heading">Welcome back</h2>
+    <p class="modal-subtitle">Sign in to continue your practice journey</p>
+
+    <!-- Alert banner -->
+    <div class="modal-alert" id="login-alert" role="alert"></div>
+
+    <!-- Email -->
+    <div class="form-field">
+      <label for="login-email">Email address</label>
+      <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+      <div class="field-error" id="login-email-err">Please enter a valid email address</div>
+    </div>
+
+    <!-- Password -->
+    <div class="form-field">
+      <label for="login-pass">Password</label>
+      <div class="pass-wrap">
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+        <button class="pass-eye" type="button" data-target="login-pass" aria-label="Toggle password visibility">👁</button>
+      </div>
+      <div class="field-error" id="login-pass-err">Password is required</div>
+    </div>
+
+    <button class="btn-submit" id="btn-login-submit">
+      <span class="btn-text">Log in to SkillLens AI</span>
+      <div class="btn-spinner" aria-hidden="true"></div>
+    </button>
+
+    <p style="text-align:right;margin-top:11px;font-size:12px;color:var(--muted);cursor:pointer" id="forgot-link">Forgot password?</p>
+
     <div class="modal-divider">or</div>
-    <p class="modal-switch">Don't have an account? <span onclick="switchModal('modal-login','modal-signup')">Create one free →</span></p>
+    <p class="modal-switch">Don't have an account? <a id="switch-to-signup">Create one free →</a></p>
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-signup" onclick="overlayClose(event,'modal-signup')">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="Sign up">
-    <button class="modal-close" onclick="closeModal('modal-signup')" aria-label="Close">✕</button>
-    <div class="modal-ai-badge">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+<!-- ═══════════════════════════════════════════════════
+     SIGNUP MODAL
+═══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-signup" role="dialog" aria-modal="true" aria-labelledby="signup-heading">
+  <div class="modal-box modal-signup-box">
+    <button class="modal-close-btn" id="close-signup" aria-label="Close signup modal">✕</button>
+
+    <div class="modal-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
       Join 12,000+ students already practicing
     </div>
-    <h2>Create your account</h2>
-    <p class="modal-sub">Free forever. No credit card required.</p>
-    <div class="modal-field"><label>Full name</label><input type="text" placeholder="Arjun Kumar"></div>
-    <div class="modal-field"><label>Email address</label><input type="email" placeholder="you@example.com"></div>
-    <div class="modal-field"><label>Password</label><input type="password" placeholder="Create a strong password"></div>
-    <button class="btn-modal-submit">Create free account</button>
+
+    <h2 class="modal-title" id="signup-heading">Create your account</h2>
+    <p class="modal-subtitle">Free forever — no credit card required</p>
+
+    <!-- Alert banner -->
+    <div class="modal-alert" id="signup-alert" role="alert"></div>
+
+    <!-- Row 1: Name + Email -->
+    <div class="form-row">
+      <div class="form-field">
+        <label for="su-name">Full name</label>
+        <input type="text" id="su-name" placeholder="Arjun Sharma" autocomplete="name">
+        <div class="field-error" id="su-name-err">Full name is required</div>
+      </div>
+      <div class="form-field">
+        <label for="su-email">Email address</label>
+        <input type="email" id="su-email" placeholder="you@example.com" autocomplete="email">
+        <div class="field-error" id="su-email-err">Valid email is required</div>
+      </div>
+    </div>
+
+    <!-- Row 2: College + Branch -->
+    <div class="form-row">
+      <div class="form-field">
+        <label for="su-college">College / University</label>
+        <input type="text" id="su-college" placeholder="IIT Delhi">
+      </div>
+      <div class="form-field">
+        <label for="su-branch">Branch</label>
+        <input type="text" id="su-branch" placeholder="Computer Science">
+      </div>
+    </div>
+
+    <!-- Row 3: Year + Password -->
+    <div class="form-row">
+      <div class="form-field">
+        <label for="su-year">Year of study</label>
+        <select id="su-year">
+          <option value="" disabled selected>Select year</option>
+          <option value="1">1st Year</option>
+          <option value="2">2nd Year</option>
+          <option value="3">3rd Year</option>
+          <option value="4">4th Year</option>
+          <option value="5">5th Year</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="su-pass">Password</label>
+        <div class="pass-wrap">
+          <input type="password" id="su-pass" placeholder="Min. 6 characters" autocomplete="new-password">
+          <button class="pass-eye" type="button" data-target="su-pass" aria-label="Toggle password visibility">👁</button>
+        </div>
+        <div class="pass-strength-bar"><div class="pass-strength-fill" id="strength-fill"></div></div>
+        <div class="pass-strength-label" id="strength-label"></div>
+        <div class="field-error" id="su-pass-err">Password must be at least 6 characters</div>
+      </div>
+    </div>
+
+    <button class="btn-submit" id="btn-signup-submit">
+      <span class="btn-text">Create free account</span>
+      <div class="btn-spinner" aria-hidden="true"></div>
+    </button>
+
     <div class="modal-divider">or</div>
-    <p class="modal-switch">Already have an account? <span onclick="switchModal('modal-signup','modal-login')">Log in →</span></p>
+    <p class="modal-switch">Already have an account? <a id="switch-to-login">Log in →</a></p>
   </div>
 </div>
 
+<!-- ═══ TOAST ═══ -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════════ -->
 <main>
-<!-- ── HERO ── -->
-<section class="hero" style="padding:160px 48px 80px;max-width:900px;margin:0 auto" id="about">
-  <div class="hero-badge">
-    <span class="hero-badge-pulse"></span>
-    Powered by advanced AI — now in early access
-  </div>
-  <h1>Ace Every Interview<br>with <em>SkillLens AI</em></h1>
-  <p class="hero-sub">Practice HR, technical and coding interviews. Get real-time AI feedback, track your growth, and walk into every interview with confidence.</p>
-  <div class="hero-btns">
-    <button class="btn-hero btn-hero-cta" onclick="openModal('signup')">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      Start practicing free
-    </button>
-    <button class="btn-hero btn-hero-outline">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-      Watch demo
-    </button>
-  </div>
-  <div class="hero-stats">
-    <div class="stat"><div class="stat-num">12K+</div><div class="stat-label">Students practicing</div></div>
-    <div class="stat"><div class="stat-num">98%</div><div class="stat-label">Satisfaction rate</div></div>
-    <div class="stat"><div class="stat-num">4.9★</div><div class="stat-label">Average rating</div></div>
-    <div class="stat"><div class="stat-num">300K+</div><div class="stat-label">Interviews practiced</div></div>
-  </div>
-</section>
 
-<!-- ── FEATURES ── -->
-<section id="features">
-  <p class="section-eyebrow">Platform features</p>
-  <h2 class="section-title">Everything you need to<br>land your dream role</h2>
-  <p class="section-sub">Six AI-powered modules that cover every stage of your interview preparation journey.</p>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="fc-icon fc-blue">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      </div>
-      <h3>Resume Analyzer</h3>
-      <p>Upload your resume and receive an instant ATS score, missing skills detection, and AI-powered improvement suggestions tailored to your target role.</p>
-      <span class="fc-tag">ATS Optimized</span>
+  <!-- HERO -->
+  <div class="hero" id="about">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Powered by Gemini AI — now in early access
     </div>
-    <div class="feature-card">
-      <div class="fc-icon fc-purple">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      </div>
-      <h3>HR Interview Simulator</h3>
-      <p>Practice common behavioral and situational HR questions with instant AI feedback on your tone, structure, and relevance using the STAR method.</p>
-      <span class="fc-tag">Behavioral AI</span>
+    <h1>Ace Every Interview<br>with <em class="grad">SkillLens AI</em></h1>
+    <p class="hero-sub">Practice HR, technical and coding interviews. Get real-time AI feedback, track your growth, and walk into every interview with complete confidence.</p>
+    <div class="hero-btns">
+      <button class="btn-cta" id="hero-cta-signup">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Start practicing free
+      </button>
+      <button class="btn-outline">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Watch demo
+      </button>
     </div>
-    <div class="feature-card">
-      <div class="fc-icon fc-cyan">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-      </div>
-      <h3>Technical Interview Simulator</h3>
-      <p>Prepare for technical rounds covering DSA, OOP, DBMS, Operating Systems, Computer Networks, and Web Development with adaptive question banks.</p>
-      <span class="fc-tag">6 Categories</span>
-    </div>
-    <div class="feature-card">
-      <div class="fc-icon fc-pink">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      </div>
-      <h3>Coding Interview Practice</h3>
-      <p>Solve coding problems inside an integrated editor with automated test evaluation, time complexity hints, and step-by-step solution walkthroughs.</p>
-      <span class="fc-tag">Auto Evaluated</span>
-    </div>
-    <div class="feature-card">
-      <div class="fc-icon fc-green">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-      </div>
-      <h3>AI Feedback Engine</h3>
-      <p>Receive detailed feedback scoring communication, clarity, confidence, and technical accuracy — with specific suggestions for every answer you give.</p>
-      <span class="fc-tag">Real-time</span>
-    </div>
-    <div class="feature-card">
-      <div class="fc-icon fc-amber">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      </div>
-      <h3>Performance Analytics</h3>
-      <p>Track scores over time, identify weak categories, and visualise your improvement trend through interactive dashboards and downloadable reports.</p>
-      <span class="fc-tag">Visual Insights</span>
+    <div class="hero-stats">
+      <div><div class="stat-num" data-target="12000" data-sfx="K+">0</div><div class="stat-lbl">Students practicing</div></div>
+      <div><div class="stat-num" data-target="98" data-sfx="%">0</div><div class="stat-lbl">Satisfaction rate</div></div>
+      <div><div class="stat-num" data-target="4" data-sfx=".9 ★">0</div><div class="stat-lbl">Average rating</div></div>
+      <div><div class="stat-num" data-target="300" data-sfx="K+">0</div><div class="stat-lbl">Interviews practiced</div></div>
     </div>
   </div>
-</section>
 
-<!-- ── DASHBOARD PREVIEW ── -->
-<section id="preview" style="padding-top:0">
-  <p class="section-eyebrow">Dashboard preview</p>
-  <h2 class="section-title">Your command centre,<br>all in one place</h2>
-  <p class="section-sub">A live snapshot of your progress — interviews taken, scores earned, and improvement trends at a glance.</p>
-  <div class="dash-preview">
-    <div class="dash-preview-top">
-      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
-      <span class="dash-preview-label">SkillLens AI — Dashboard</span>
-    </div>
-    <div class="dash-inner">
-      <div class="dash-welcome">Welcome back, Arjun 👋</div>
-      <div class="dash-sub">You're on a 5-day streak — keep it going!</div>
-      <div class="dash-stats">
-        <div class="ds-card">
-          <div class="ds-icon">🎙️</div>
-          <div class="ds-val c-blue">27</div>
-          <div class="ds-lbl">Interviews taken</div>
-        </div>
-        <div class="ds-card">
-          <div class="ds-icon">⭐</div>
-          <div class="ds-val c-purple">78%</div>
-          <div class="ds-lbl">Average score</div>
-        </div>
-        <div class="ds-card">
-          <div class="ds-icon">📄</div>
-          <div class="ds-val c-green">82</div>
-          <div class="ds-lbl">Resume score</div>
-        </div>
-        <div class="ds-card">
-          <div class="ds-icon">📈</div>
-          <div class="ds-val c-amber">+14%</div>
-          <div class="ds-lbl">Improvement rate</div>
-        </div>
+  <!-- FEATURES -->
+  <div class="section-wrap" id="features">
+    <p class="eyebrow reveal">Platform features</p>
+    <h2 class="section-title reveal">Everything you need to<br>land your dream role</h2>
+    <p class="section-sub reveal">Six AI-powered modules covering every stage of your interview preparation journey.</p>
+    <div class="features-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="fc-icon ic-blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <h3>Resume Analyzer</h3>
+        <p>Upload your resume and receive an instant ATS score, missing skills detection, and AI-powered improvement suggestions tailored to your target role.</p>
+        <span class="fc-tag">ATS Optimized</span>
       </div>
-      <div class="dash-actions">
-        <div class="da-btn">
-          <div class="da-btn-icon c-blue">👥</div>
-          <div class="da-btn-label">Start HR interview</div>
-          <div class="da-btn-sub">Behavioral & situational</div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="fc-icon ic-purple"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <h3>HR Interview Simulator</h3>
+        <p>Practice behavioral and situational HR questions with instant AI feedback on tone, structure, and relevance using the STAR method.</p>
+        <span class="fc-tag">Behavioral AI</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="fc-icon ic-cyan"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+        <h3>Technical Interview Simulator</h3>
+        <p>Prepare for DSA, OOP, DBMS, OS, CN, and Web Development with adaptive question banks and Gemini-powered evaluation.</p>
+        <span class="fc-tag">6 Categories</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-4">
+        <div class="fc-icon ic-pink"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <h3>Coding Interview Practice</h3>
+        <p>Solve coding problems in an integrated editor with automated test evaluation, time complexity hints, and step-by-step walkthroughs.</p>
+        <span class="fc-tag">Auto Evaluated</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-5">
+        <div class="fc-icon ic-green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+        <h3>AI Feedback Engine</h3>
+        <p>Receive detailed feedback scoring communication, clarity, confidence, and technical accuracy — with specific improvement suggestions.</p>
+        <span class="fc-tag">Real-time</span>
+      </div>
+      <div class="feature-card reveal reveal-delay-6">
+        <div class="fc-icon ic-amber"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <h3>Performance Analytics</h3>
+        <p>Track scores over time, identify weak categories, and visualise improvement trends through interactive charts and downloadable reports.</p>
+        <span class="fc-tag">Visual Insights</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PREVIEW -->
+  <div class="section-wrap" id="preview" style="padding-top:0">
+    <p class="eyebrow reveal">Dashboard preview</p>
+    <h2 class="section-title reveal">Your command centre,<br>all in one place</h2>
+    <p class="section-sub reveal">A live snapshot of your progress — interviews taken, scores earned, and improvement trends at a glance.</p>
+    <div class="dash-preview reveal">
+      <div class="dp-chrome">
+        <div class="chrome-dot c-red"></div>
+        <div class="chrome-dot c-yellow"></div>
+        <div class="chrome-dot c-green"></div>
+        <span class="chrome-title">SkillLens AI — Dashboard</span>
+      </div>
+      <div class="dp-body">
+        <div class="dp-welcome">Welcome back, Arjun 👋</div>
+        <div class="dp-tagline">You're on a 5-day streak — keep it going!</div>
+        <div class="dp-stats">
+          <div class="dp-stat"><div class="dp-stat-icon">🎙️</div><div class="dp-stat-val c-b">27</div><div class="dp-stat-lbl">Interviews taken</div></div>
+          <div class="dp-stat"><div class="dp-stat-icon">⭐</div><div class="dp-stat-val c-p">78%</div><div class="dp-stat-lbl">Average score</div></div>
+          <div class="dp-stat"><div class="dp-stat-icon">📄</div><div class="dp-stat-val c-g">82</div><div class="dp-stat-lbl">Resume score</div></div>
+          <div class="dp-stat"><div class="dp-stat-icon">📈</div><div class="dp-stat-val c-a">+14%</div><div class="dp-stat-lbl">Improvement rate</div></div>
         </div>
-        <div class="da-btn">
-          <div class="da-btn-icon c-purple">💻</div>
-          <div class="da-btn-label">Start technical interview</div>
-          <div class="da-btn-sub">DSA, OOP, DBMS & more</div>
-        </div>
-        <div class="da-btn">
-          <div class="da-btn-icon c-green">📋</div>
-          <div class="da-btn-label">Analyze resume</div>
-          <div class="da-btn-sub">Get your ATS score</div>
+        <div class="dp-actions">
+          <div class="dp-action"><div class="dp-action-icon c-b">👥</div><div class="dp-action-lbl">Start HR interview</div><div class="dp-action-sub">Behavioral &amp; situational</div></div>
+          <div class="dp-action"><div class="dp-action-icon c-p">💻</div><div class="dp-action-lbl">Start technical interview</div><div class="dp-action-sub">DSA, OOP, DBMS &amp; more</div></div>
+          <div class="dp-action"><div class="dp-action-icon c-g">📋</div><div class="dp-action-lbl">Analyze resume</div><div class="dp-action-sub">Get your ATS score</div></div>
         </div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- ── HOW IT WORKS ── -->
-<section id="how">
-  <p class="section-eyebrow">How it works</p>
-  <h2 class="section-title">From upload to offer in<br>four simple steps</h2>
-  <p class="section-sub">Our AI guides you through every stage — no guesswork, just structured improvement.</p>
-  <div class="steps-row">
-    <div class="step-item">
-      <div class="step-num-wrap">
-        <span class="step-num-inner">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        </span>
+  <!-- HOW IT WORKS -->
+  <div class="section-wrap" id="how">
+    <p class="eyebrow reveal">How it works</p>
+    <h2 class="section-title reveal">From upload to offer in<br>four simple steps</h2>
+    <p class="section-sub reveal">Our AI guides you through every stage — no guesswork, just structured improvement.</p>
+    <div class="steps-row">
+      <div class="step reveal reveal-delay-1">
+        <div class="step-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <h4>Upload resume</h4>
+        <p>SkillLens AI personalises every session to your profile, skills, and target role.</p>
       </div>
-      <h4>Upload resume</h4>
-      <p>Share your resume so SkillLens AI can personalise every practice session to your profile and target role.</p>
-    </div>
-    <div class="step-item">
-      <div class="step-num-wrap">
-        <span class="step-num-inner">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
-        </span>
+      <div class="step reveal reveal-delay-2">
+        <div class="step-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div>
+        <h4>Practice interviews</h4>
+        <p>Answer real-world questions across HR, technical, and coding rounds at your own pace.</p>
       </div>
-      <h4>Practice interviews</h4>
-      <p>Answer real-world questions across HR, technical, and coding rounds — at your own pace, anytime.</p>
-    </div>
-    <div class="step-item">
-      <div class="step-num-wrap">
-        <span class="step-num-inner">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-        </span>
+      <div class="step reveal reveal-delay-3">
+        <div class="step-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+        <h4>Receive AI feedback</h4>
+        <p>Instant, detailed scoring on communication, accuracy, structure, and confidence.</p>
       </div>
-      <h4>Receive AI feedback</h4>
-      <p>Get instant, detailed feedback on every answer — communication, accuracy, structure, and confidence scored.</p>
-    </div>
-    <div class="step-item">
-      <div class="step-num-wrap">
-        <span class="step-num-inner">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-        </span>
+      <div class="step reveal reveal-delay-4">
+        <div class="step-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        <h4>Track &amp; improve</h4>
+        <p>Monitor trends, find weak areas, and keep levelling up until you land the offer.</p>
       </div>
-      <h4>Track & improve</h4>
-      <p>Monitor score trends, identify weak areas, and keep levelling up until you land the offer you deserve.</p>
     </div>
   </div>
-</section>
 
-<!-- ── COMING SOON ── -->
-<section style="padding-top:0">
-  <p class="section-eyebrow">Coming soon</p>
-  <h2 class="section-title">The platform keeps growing</h2>
-  <p class="section-sub">New AI modules are in active development. Stay tuned for expanded preparation tools.</p>
-  <div class="future-grid">
-    <div class="future-card">
-      <span class="future-badge">Q3 2025</span>
-      <div class="future-icon">🎙️</div>
-      <h4>Voice Interview Analysis</h4>
-      <p style="font-size:12px;color:var(--muted)">Real-time analysis of tone, pace, and speech confidence</p>
-    </div>
-    <div class="future-card">
-      <span class="future-badge">Q3 2025</span>
-      <div class="future-icon">📹</div>
-      <h4>Video Interview Analysis</h4>
-      <p style="font-size:12px;color:var(--muted)">Body language and facial expression AI coaching</p>
-    </div>
-    <div class="future-card">
-      <span class="future-badge">Q4 2025</span>
-      <div class="future-icon">🏢</div>
-      <h4>Company-Specific Prep</h4>
-      <p style="font-size:12px;color:var(--muted)">Tailored question banks for Google, Amazon, Microsoft & more</p>
-    </div>
-    <div class="future-card">
-      <span class="future-badge">Q4 2025</span>
-      <div class="future-icon">📊</div>
-      <h4>Placement Readiness Report</h4>
-      <p style="font-size:12px;color:var(--muted)">Comprehensive report of placement readiness by role and company</p>
+  <!-- COMING SOON -->
+  <div class="section-wrap" style="padding-top:0">
+    <p class="eyebrow reveal">Coming soon</p>
+    <h2 class="section-title reveal">The platform keeps growing</h2>
+    <p class="section-sub reveal">New AI modules in active development — designed to scale without redesign.</p>
+    <div class="future-grid">
+      <div class="future-card reveal reveal-delay-1"><span class="future-badge">Q3 2026</span><div class="future-icon">🎙️</div><h4>Voice Interview Analysis</h4><p>Real-time tone, pace, and speech confidence scoring</p></div>
+      <div class="future-card reveal reveal-delay-2"><span class="future-badge">Q3 2026</span><div class="future-icon">📹</div><h4>Video Interview Analysis</h4><p>Body language and facial expression AI coaching</p></div>
+      <div class="future-card reveal reveal-delay-3"><span class="future-badge">Q4 2026</span><div class="future-icon">🏢</div><h4>Company-Specific Prep</h4><p>Tailored question banks for FAANG, unicorns, and PSUs</p></div>
+      <div class="future-card reveal reveal-delay-4"><span class="future-badge">Q4 2026</span><div class="future-icon">📊</div><h4>Placement Readiness Report</h4><p>Full report by role, company, and salary band</p></div>
     </div>
   </div>
-</section>
 
-<!-- ── CTA ── -->
-<div class="cta-section">
-  <div class="cta-card">
-    <h2>Ready to Land Your<br>Dream Job?</h2>
-    <p>Practice smarter, improve faster, and build interview confidence with SkillLens AI. Join 12,000+ students already preparing.</p>
-    <div class="cta-btns">
-      <button class="btn-hero btn-hero-cta" onclick="openModal('signup')">Start practicing</button>
-      <button class="btn-hero btn-hero-outline" onclick="openModal('signup')">Create free account</button>
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="cta-card reveal">
+      <h2>Ready to Land Your<br>Dream Job?</h2>
+      <p>Practice smarter, improve faster, and build interview confidence with SkillLens AI. Join 12,000+ students already preparing.</p>
+      <div class="cta-btns">
+        <button class="btn-cta" id="cta-signup-btn">Start practicing free</button>
+        <button class="btn-outline" id="cta-login-btn">Log in</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ── FOOTER ── -->
-<div style="max-width:1100px;margin:0 auto;padding:0 48px">
-  <footer style="border-top:0.5px solid var(--border);padding:36px 0;border-radius:0;border-bottom:none">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <div class="logo-mark">SL</div>
-        SkillLens AI
-      </div>
-      <div class="footer-links">
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-        <a href="#">Contact</a>
-      </div>
-      <div class="footer-socials">
-        <a href="#" class="social-btn" aria-label="Twitter/X">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
-        </a>
-        <a href="#" class="social-btn" aria-label="LinkedIn">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-        </a>
-        <a href="#" class="social-btn" aria-label="GitHub">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-        </a>
-        <a href="#" class="social-btn" aria-label="Instagram">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-        </a>
-      </div>
+  <!-- DEVELOPER -->
+  <div class="dev-section" id="developer">
+    <p class="eyebrow reveal">The developer</p>
+    <h2 class="section-title reveal">Meet the Builder</h2>
+    <p class="section-sub reveal" style="margin-bottom:38px">Built with passion by a final-year CS student who wanted a smarter way to prepare for placements — so he built one.</p>
+    <div class="dev-grid">
+      <a href="https://github.com/Arjunuk1" target="_blank" rel="noopener noreferrer" class="dev-card gh reveal reveal-delay-1">
+        <div class="dev-icon di-gh"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg></div>
+        <h4>GitHub</h4>
+        <p>View source code, projects, and open-source contributions</p>
+        <div class="dev-handle" style="color:#a78bfa">@Arjunuk1</div>
+        <div class="dev-arrow">View profile →</div>
+      </a>
+      <a href="https://www.linkedin.com/in/arjunsharma-cse/" target="_blank" rel="noopener noreferrer" class="dev-card li reveal reveal-delay-2">
+        <div class="dev-icon di-li"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></div>
+        <h4>LinkedIn</h4>
+        <p>Connect professionally — open to opportunities and collaborations</p>
+        <div class="dev-handle" style="color:#60a5fa">Arjun Sharma · CSE</div>
+        <div class="dev-arrow">Connect →</div>
+      </a>
+      <a href="mailto:arjun251898@gmail.com" class="dev-card em reveal reveal-delay-3">
+        <div class="dev-icon di-em"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+        <h4>Email</h4>
+        <p>Reach out for project feedback, hiring queries, or collaboration ideas</p>
+        <div class="dev-handle" style="color:#22d3ee">arjun251898@gmail.com</div>
+        <div class="dev-arrow">Send email →</div>
+      </a>
     </div>
-    <p class="footer-copy">© 2025 SkillLens AI. All rights reserved. Built with ❤️ for students everywhere.</p>
-  </footer>
-</div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-wrap">
+    <footer>
+      <div class="footer-row">
+        <div class="footer-brand">
+          <div class="nav-mark">SL</div>
+          SkillLens AI
+        </div>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Contact</a>
+        </div>
+        <div class="footer-socials">
+          <a href="https://github.com/Arjunuk1" target="_blank" rel="noopener noreferrer" class="soc-btn" aria-label="GitHub">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          </a>
+          <a href="https://www.linkedin.com/in/arjunsharma-cse/" target="_blank" rel="noopener noreferrer" class="soc-btn" aria-label="LinkedIn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+          <a href="mailto:arjun251898@gmail.com" class="soc-btn" aria-label="Email">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </a>
+        </div>
+      </div>
+      <p class="footer-copy">© 2026 SkillLens AI &nbsp;·&nbsp; Built by Arjun Sharma &nbsp;·&nbsp; All rights reserved</p>
+    </footer>
+  </div>
 
 </main>
 
 <script>
-// ── PARTICLES ──
-const canvas = document.getElementById('particles-canvas');
-const ctx = canvas.getContext('2d');
-function resize(){ canvas.width = window.innerWidth; canvas.height = document.body.scrollHeight; }
-window.addEventListener('resize', resize);
-resize();
-const N = 80;
-const pts = Array.from({length:N}, () => ({
-  x: Math.random()*canvas.width,
-  y: Math.random()*canvas.height,
-  vx: (Math.random()-.5)*.4,
-  vy: (Math.random()-.5)*.4,
-  r: Math.random()*1.6+.5
+/* ═══════════════════════════════════════════════════
+   CONFIGURATION
+═══════════════════════════════════════════════════ */
+const API_BASE = 'http://localhost:5000/api';
+
+/* ═══════════════════════════════════════════════════
+   LOADER
+═══════════════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hide');
+    initCounters();
+  }, 2000);
+});
+
+/* ═══════════════════════════════════════════════════
+   CURSOR GLOW
+═══════════════════════════════════════════════════ */
+const cursorGlow = document.getElementById('cursor-glow');
+let cursorVisible = false;
+document.addEventListener('mousemove', (e) => {
+  cursorGlow.style.left = e.clientX + 'px';
+  cursorGlow.style.top  = e.clientY + 'px';
+  if (!cursorVisible) { cursorGlow.style.opacity = '1'; cursorVisible = true; }
+});
+document.addEventListener('mouseleave', () => { cursorGlow.style.opacity = '0'; cursorVisible = false; });
+
+/* ═══════════════════════════════════════════════════
+   PARTICLE SYSTEM WITH MOUSE PARALLAX
+═══════════════════════════════════════════════════ */
+const canvas = document.getElementById('particles');
+const ctx    = canvas.getContext('2d');
+let mouseX = null, mouseY = null;
+
+function resizeCanvas() {
+  canvas.width  = window.innerWidth;
+  canvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
+}
+window.addEventListener('resize', resizeCanvas);
+document.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY + window.scrollY;
+});
+resizeCanvas();
+
+const PARTICLE_COUNT = 95;
+const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+  x:  Math.random() * canvas.width,
+  y:  Math.random() * canvas.height,
+  vx: (Math.random() - 0.5) * 0.38,
+  vy: (Math.random() - 0.5) * 0.38,
+  r:  Math.random() * 1.7 + 0.4,
 }));
-function drawParticles(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  pts.forEach(p => {
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    // Gentle mouse attraction
+    if (mouseX !== null) {
+      p.vx += (mouseX - p.x) * 7e-5;
+      p.vy += (mouseY - p.y) * 7e-5;
+    }
+    // Speed cap
+    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+    if (speed > 0.85) { p.vx *= 0.85 / speed; p.vy *= 0.85 / speed; }
     p.x += p.vx; p.y += p.vy;
-    if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
-    if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle='rgba(167,139,250,0.5)'; ctx.fill();
+    if (p.x < 0 || p.x > canvas.width)  p.vx *= -1;
+    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(167,139,250,0.48)';
+    ctx.fill();
   });
-  for(let i=0;i<pts.length;i++){
-    for(let j=i+1;j<pts.length;j++){
-      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy);
-      if(d<120){
-        ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y);
-        ctx.strokeStyle=`rgba(167,139,250,${.1*(1-d/120)})`; ctx.lineWidth=.5; ctx.stroke();
+  // Constellation lines
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const d  = Math.sqrt(dx * dx + dy * dy);
+      if (d < 128) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(167,139,250,${0.11 * (1 - d / 128)})`;
+        ctx.lineWidth   = 0.5;
+        ctx.stroke();
       }
     }
   }
   requestAnimationFrame(drawParticles);
 }
 drawParticles();
+setTimeout(resizeCanvas, 700);
 
-// ── MODALS ──
-function openModal(id){
-  document.getElementById('modal-'+id).classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeModal(id){
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow='';
-}
-function overlayClose(e,id){
-  if(e.target===document.getElementById(id)) closeModal(id);
-}
-function switchModal(from,to){
-  closeModal(from);
-  setTimeout(()=>openModal(to.replace('modal-','')),200);
-}
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal('modal-login'); closeModal('modal-signup'); document.body.style.overflow=''; }});
-
-// ── SCROLL ANIMATION ──
-const observer = new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
+/* ═══════════════════════════════════════════════════
+   SCROLL REVEAL
+═══════════════════════════════════════════════════ */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
   });
-},{threshold:0.1});
-document.querySelectorAll('.feature-card,.future-card,.step-item,.ds-card').forEach(el=>{
-  el.style.opacity='0'; el.style.transform='translateY(24px)'; el.style.transition='opacity 0.55s ease, transform 0.55s ease';
-  observer.observe(el);
+}, { threshold: 0.07 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+/* ═══════════════════════════════════════════════════
+   ANIMATED COUNTERS
+═══════════════════════════════════════════════════ */
+function initCounters() {
+  document.querySelectorAll('[data-target]').forEach(el => {
+    const target = parseFloat(el.dataset.target);
+    const suffix = el.dataset.sfx || '';
+    const dur    = 1900;
+    let startTime = null;
+    function step(ts) {
+      if (!startTime) startTime = ts;
+      const progress = Math.min((ts - startTime) / dur, 1);
+      const eased    = 1 - Math.pow(1 - progress, 3);
+      const value    = Math.floor(eased * target);
+      el.textContent = value + suffix;
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════ */
+let toastTimer = null;
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  toast.innerHTML = `<span>${icons[type] || ''}</span> ${message}`;
+  toast.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.className = ''; }, 3800);
+}
+
+/* ═══════════════════════════════════════════════════
+   MODAL ENGINE — COMPLETELY REBUILT & FIXED
+═══════════════════════════════════════════════════ */
+
+// Track which modal is open
+let activeModal = null;
+
+function openModal(id) {
+  // Close any open modal first
+  if (activeModal) closeModal(activeModal, false);
+  const overlay = document.getElementById(id);
+  if (!overlay) return;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  activeModal = id;
+  // Focus first input
+  setTimeout(() => {
+    const firstInput = overlay.querySelector('input');
+    if (firstInput) firstInput.focus();
+  }, 320);
+}
+
+function closeModal(id, resetScroll = true) {
+  const overlay = document.getElementById(id);
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  if (resetScroll) document.body.style.overflow = '';
+  if (activeModal === id) activeModal = null;
+  clearAllErrors(id);
+}
+
+function switchModal(fromId, toId) {
+  closeModal(fromId, false);
+  setTimeout(() => openModal(toId), 240);
+}
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeModal(overlay.id);
+  });
 });
 
-// ── RESIZE canvas on content change ──
-setTimeout(resize, 500);
+// Close on Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && activeModal) closeModal(activeModal);
+});
+
+// Wire navbar buttons
+document.getElementById('btn-open-login').addEventListener('click',  () => openModal('modal-login'));
+document.getElementById('btn-open-signup').addEventListener('click', () => openModal('modal-signup'));
+document.getElementById('hero-cta-signup').addEventListener('click', () => openModal('modal-signup'));
+document.getElementById('cta-signup-btn').addEventListener('click',  () => openModal('modal-signup'));
+document.getElementById('cta-login-btn').addEventListener('click',   () => openModal('modal-login'));
+
+// Wire close buttons
+document.getElementById('close-login').addEventListener('click',  () => closeModal('modal-login'));
+document.getElementById('close-signup').addEventListener('click', () => closeModal('modal-signup'));
+
+// Wire switch links
+document.getElementById('switch-to-signup').addEventListener('click', () => switchModal('modal-login',  'modal-signup'));
+document.getElementById('switch-to-login').addEventListener('click',  () => switchModal('modal-signup', 'modal-login'));
+
+// Forgot password
+document.getElementById('forgot-link').addEventListener('click', () => {
+  showToast('Password reset link coming soon!', 'info');
+});
+
+/* ═══════════════════════════════════════════════════
+   PASSWORD TOGGLE
+═══════════════════════════════════════════════════ */
+document.querySelectorAll('.pass-eye').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    if (!input) return;
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.textContent = isHidden ? '🙈' : '👁';
+  });
+});
+
+/* ═══════════════════════════════════════════════════
+   PASSWORD STRENGTH METER
+═══════════════════════════════════════════════════ */
+document.getElementById('su-pass').addEventListener('input', function () {
+  const val   = this.value;
+  const bar   = document.getElementById('strength-fill');
+  const label = document.getElementById('strength-label');
+  if (!val) { bar.style.width = '0'; label.textContent = ''; return; }
+  let score = 0;
+  if (val.length >= 6)  score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const levels = [
+    { w: '0%',   bg: '',          txt: '' },
+    { w: '20%',  bg: '#ef4444',   txt: 'Very weak' },
+    { w: '40%',  bg: '#f97316',   txt: 'Weak' },
+    { w: '65%',  bg: '#eab308',   txt: 'Fair' },
+    { w: '85%',  bg: '#22c55e',   txt: 'Strong' },
+    { w: '100%', bg: '#10b981',   txt: 'Very strong' },
+  ];
+  const lvl = levels[score];
+  bar.style.width      = lvl.w;
+  bar.style.background = lvl.bg;
+  label.textContent    = lvl.txt;
+  label.style.color    = lvl.bg || 'var(--muted)';
+});
+
+/* ═══════════════════════════════════════════════════
+   VALIDATION HELPERS
+═══════════════════════════════════════════════════ */
+function setFieldError(inputId, errorId, show) {
+  const input = document.getElementById(inputId);
+  const error = document.getElementById(errorId);
+  if (input) input.classList.toggle('invalid', show);
+  if (error) error.classList.toggle('visible', show);
+}
+
+function clearAllErrors(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.querySelectorAll('input.invalid').forEach(el => el.classList.remove('invalid'));
+  modal.querySelectorAll('.field-error.visible').forEach(el => el.classList.remove('visible'));
+  const alert = modal.querySelector('.modal-alert');
+  if (alert) { alert.className = 'modal-alert'; alert.textContent = ''; }
+}
+
+function showModalAlert(alertId, message, type) {
+  const el = document.getElementById(alertId);
+  if (!el) return;
+  el.className = `modal-alert show ${type}`;
+  el.innerHTML = (type === 'success' ? '✅' : '❌') + ' ' + message;
+}
+
+function setButtonLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.classList.toggle('loading', loading);
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+/* ═══════════════════════════════════════════════════
+   LOGIN HANDLER
+═══════════════════════════════════════════════════ */
+async function handleLogin() {
+  clearAllErrors('modal-login');
+
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-pass').value;
+  let valid = true;
+
+  if (!email || !isValidEmail(email)) {
+    setFieldError('login-email', 'login-email-err', true);
+    valid = false;
+  }
+  if (!password) {
+    setFieldError('login-pass', 'login-pass-err', true);
+    valid = false;
+  }
+  if (!valid) return;
+
+  setButtonLoading('btn-login-submit', true);
+  try {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, password }),
+    });
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      // Store auth data
+      localStorage.setItem('sl_token', data.token);
+      localStorage.setItem('sl_user',  JSON.stringify(data.user));
+      showModalAlert('login-alert', 'Login successful! Redirecting to dashboard...', 'success');
+      showToast(`Welcome back, ${data.user.fullName}! 👋`, 'success');
+      setTimeout(() => {
+        closeModal('modal-login');
+        // window.location.href = '/dashboard';  // Uncomment when dashboard is ready
+      }, 1500);
+    } else {
+      showModalAlert('login-alert', data.message || 'Invalid email or password', 'error');
+    }
+  } catch (err) {
+    showModalAlert('login-alert', 'Cannot connect to server. Make sure the backend is running on port 5000.', 'error');
+  } finally {
+    setButtonLoading('btn-login-submit', false);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   SIGNUP HANDLER
+═══════════════════════════════════════════════════ */
+async function handleSignup() {
+  clearAllErrors('modal-signup');
+
+  const fullName = document.getElementById('su-name').value.trim();
+  const email    = document.getElementById('su-email').value.trim();
+  const password = document.getElementById('su-pass').value;
+  const college  = document.getElementById('su-college').value.trim();
+  const branch   = document.getElementById('su-branch').value.trim();
+  const year     = document.getElementById('su-year').value;
+  let valid = true;
+
+  if (!fullName || fullName.length < 2) {
+    setFieldError('su-name', 'su-name-err', true);
+    valid = false;
+  }
+  if (!email || !isValidEmail(email)) {
+    setFieldError('su-email', 'su-email-err', true);
+    valid = false;
+  }
+  if (!password || password.length < 6) {
+    setFieldError('su-pass', 'su-pass-err', true);
+    valid = false;
+  }
+  if (!valid) return;
+
+  setButtonLoading('btn-signup-submit', true);
+  try {
+    const body = { fullName, email, password };
+    if (college) body.college = college;
+    if (branch)  body.branch  = branch;
+    if (year)    body.year    = parseInt(year, 10);
+
+    const response = await fetch(`${API_BASE}/auth/register`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    });
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      localStorage.setItem('sl_token', data.token);
+      localStorage.setItem('sl_user',  JSON.stringify(data.user));
+      showModalAlert('signup-alert', 'Account created successfully! Welcome to SkillLens AI 🎉', 'success');
+      showToast(`Welcome, ${data.user.fullName}! Your journey starts now 🚀`, 'success');
+      setTimeout(() => {
+        closeModal('modal-signup');
+        // window.location.href = '/dashboard';  // Uncomment when dashboard is ready
+      }, 1800);
+    } else {
+      showModalAlert('signup-alert', data.message || 'Registration failed. Please try again.', 'error');
+    }
+  } catch (err) {
+    showModalAlert('signup-alert', 'Cannot connect to server. Make sure the backend is running on port 5000.', 'error');
+  } finally {
+    setButtonLoading('btn-signup-submit', false);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   WIRE FORM SUBMIT BUTTONS & ENTER KEY
+═══════════════════════════════════════════════════ */
+document.getElementById('btn-login-submit').addEventListener('click', handleLogin);
+document.getElementById('btn-signup-submit').addEventListener('click', handleSignup);
+
+// Enter key in login fields
+['login-email', 'login-pass'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin();
+  });
+});
+
+// Enter key on last signup field
+document.getElementById('su-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleSignup();
+});
+
+// Clear error on input
+document.querySelectorAll('.form-field input').forEach(input => {
+  input.addEventListener('input', () => {
+    input.classList.remove('invalid');
+    const errId = input.id + '-err';
+    const err = document.getElementById(errId);
+    if (err) err.classList.remove('visible');
+  });
+});
 </script>
 </body>
 </html>
