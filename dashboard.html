@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a12;--bg2:#0e0e1a;--blue:#3B82F6;--purple:#8B5CF6;--border:rgba(255,255,255,0.08);--muted:rgba(255,255,255,0.45);--card:rgba(255,255,255,0.04);}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:#fff;display:flex;min-height:100vh}
+/* SIDEBAR */
+.sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:.5px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:50}
+.sidebar-logo{display:flex;align-items:center;gap:9px;padding:22px 20px;border-bottom:.5px solid var(--border);font-size:16px;font-weight:800;text-decoration:none;color:#fff}
+.logo-sq{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#6c5ce7,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.nav-section{padding:16px 12px 8px;font-size:10px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:.1em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:2px 8px;border-radius:10px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;text-decoration:none;transition:all .18s}
+.nav-item svg{flex-shrink:0;opacity:.7}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-item:hover svg{opacity:1}
+.nav-item.active{color:#c4b5fd;background:rgba(139,92,246,.14);font-weight:600}
+.nav-item.active svg{opacity:1;color:#a78bfa}
+.sidebar-spacer{flex:1}
+.nav-item.logout{color:rgba(239,68,68,.7)}
+.nav-item.logout:hover{color:#f87171;background:rgba(239,68,68,.08)}
+.user-card{margin:12px;padding:12px;background:rgba(255,255,255,.04);border:.5px solid var(--border);border-radius:12px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6c5ce7,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-bottom:8px}
+.user-name{font-size:12px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-email{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* MAIN */
+.main{margin-left:220px;flex:1;padding:32px;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.welcome-text h1{font-size:22px;font-weight:800;margin-bottom:4px}
+.welcome-text p{font-size:14px;color:var(--muted)}
+.streak-badge{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;background:rgba(251,191,36,.1);border:.5px solid rgba(251,191,36,.3);font-size:13px;font-weight:600;color:#fbbf24}
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+.stat-card{background:var(--card);border:.5px solid var(--border);border-radius:16px;padding:20px;transition:all .22s;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.stat-card.blue::after{background:rgba(59,130,246,.6)}.stat-card.purple::after{background:rgba(139,92,246,.6)}.stat-card.green::after{background:rgba(52,211,153,.6)}.stat-card.amber::after{background:rgba(251,191,36,.6)}
+.stat-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.15)}
+.stat-icon{font-size:20px;margin-bottom:10px}
+.stat-val{font-size:28px;font-weight:800;margin-bottom:3px}
+.stat-lbl{font-size:12px;color:var(--muted);font-weight:500}
+.stat-change{font-size:11px;margin-top:5px;font-weight:600}
+.stat-change.up{color:#34d399}.stat-change.down{color:#f87171}
+.c-b{color:#60a5fa}.c-p{color:#a78bfa}.c-g{color:#34d399}.c-a{color:#fbbf24}
+/* SKELETON */
+.sk{background:linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.05) 75%);background-size:200% 100%;animation:sk 1.5s infinite;border-radius:6px}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* QUICK ACTIONS */
+.section-hdr{font-size:15px;font-weight:700;margin-bottom:14px;color:rgba(255,255,255,.85)}
+.actions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
+.action-card{background:var(--card);border:.5px solid var(--border);border-radius:16px;padding:22px;cursor:pointer;transition:all .22s;text-decoration:none;color:inherit;display:block;position:relative;overflow:hidden}
+.action-card::before{content:'';position:absolute;inset:0;border-radius:16px;opacity:0;transition:opacity .3s}
+.action-card.blue-a::before{background:linear-gradient(135deg,rgba(59,130,246,.1),transparent)}
+.action-card.purple-a::before{background:linear-gradient(135deg,rgba(139,92,246,.1),transparent)}
+.action-card.green-a::before{background:linear-gradient(135deg,rgba(52,211,153,.1),transparent)}
+.action-card:hover{transform:translateY(-3px)}
+.action-card.blue-a:hover{border-color:rgba(59,130,246,.4);box-shadow:0 12px 32px rgba(59,130,246,.1)}
+.action-card.purple-a:hover{border-color:rgba(139,92,246,.4);box-shadow:0 12px 32px rgba(139,92,246,.1)}
+.action-card.green-a:hover{border-color:rgba(52,211,153,.4);box-shadow:0 12px 32px rgba(52,211,153,.1)}
+.action-card:hover::before{opacity:1}
+.action-icon{font-size:26px;margin-bottom:12px;position:relative;z-index:1}
+.action-title{font-size:14px;font-weight:700;margin-bottom:4px;position:relative;z-index:1}
+.action-sub{font-size:12px;color:var(--muted);position:relative;z-index:1}
+.action-arrow{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:18px;color:rgba(255,255,255,.2);transition:all .2s}
+.action-card:hover .action-arrow{color:rgba(255,255,255,.6);transform:translateY(-50%) translateX(3px)}
+/* BOTTOM GRID */
+.bottom-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.card{background:var(--card);border:.5px solid var(--border);border-radius:18px;padding:22px}
+.activity-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:.5px solid var(--border)}
+.activity-item:last-child{border-bottom:none}
+.act-left{display:flex;align-items:center;gap:12px}
+.act-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.act-name{font-size:13px;font-weight:600}
+.act-time{font-size:11px;color:var(--muted);margin-top:2px}
+.score-badge{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:700}
+.score-high{background:rgba(52,211,153,.12);color:#34d399;border:.5px solid rgba(52,211,153,.3)}
+.score-mid{background:rgba(251,191,36,.12);color:#fbbf24;border:.5px solid rgba(251,191,36,.3)}
+.score-low{background:rgba(239,68,68,.12);color:#f87171;border:.5px solid rgba(239,68,68,.3)}
+.rec-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:.5px solid var(--border);border-radius:10px;margin-bottom:8px;font-size:13px;cursor:pointer;transition:all .18s;text-decoration:none;color:inherit}
+.rec-item:hover{background:rgba(255,255,255,.06);border-color:rgba(139,92,246,.3)}
+.rec-item:last-child{margin-bottom:0}
+.rec-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.empty-state{text-align:center;padding:32px 16px;color:var(--muted);font-size:13px}
+.empty-state .e-icon{font-size:36px;margin-bottom:10px}
+.blob{position:fixed;border-radius:50%;filter:blur(100px);opacity:.08;pointer-events:none;z-index:0}
+.b1{width:500px;height:500px;background:#6c5ce7;top:-100px;left:100px}
+.b2{width:400px;height:400px;background:#00b4d8;bottom:0;right:0}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0;padding:20px}.stats-grid{grid-template-columns:1fr 1fr}.actions-grid{grid-template-columns:1fr}.bottom-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="dashboard.html" class="sidebar-logo">
+    <div class="logo-sq">SL</div>SkillLens AI
+  </a>
+  <div class="nav-section">Main</div>
+  <a href="dashboard.html" class="nav-item active">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+  <a href="resume.html" class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+    Resume Analyzer
+  </a>
+  <div class="nav-section">Practice</div>
+  <a href="hr-interview.html" class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    HR Interview
+  </a>
+  <a href="technical-interview.html" class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    Technical Interview
+  </a>
+  <div class="nav-section">Progress</div>
+  <a href="analytics.html" class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Analytics
+  </a>
+  <a href="profile.html" class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    Profile
+  </a>
+  <div class="sidebar-spacer"></div>
+  <div class="user-card">
+    <div class="user-avatar" id="sb-avatar">AK</div>
+    <div class="user-name" id="sb-name">Loading...</div>
+    <div class="user-email" id="sb-email">--</div>
+  </div>
+  <a class="nav-item logout" onclick="logout()" style="margin-bottom:12px;cursor:pointer">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Logout
+  </a>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <div class="topbar">
+    <div class="welcome-text">
+      <h1 id="welcome-msg">Welcome back 👋</h1>
+      <p id="welcome-sub">Ready for your next interview session?</p>
+    </div>
+    <div class="streak-badge" id="streak-badge">🔥 <span id="streak-val">0</span> day streak</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card blue">
+      <div class="stat-icon">🎙️</div>
+      <div class="stat-val c-b sk" id="st-interviews" style="height:34px;width:60px">&nbsp;</div>
+      <div class="stat-lbl">Interviews taken</div>
+      <div class="stat-change up" id="st-int-change"></div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-val c-p sk" id="st-avg" style="height:34px;width:60px">&nbsp;</div>
+      <div class="stat-lbl">Average score</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">📄</div>
+      <div class="stat-val c-g sk" id="st-resume" style="height:34px;width:60px">&nbsp;</div>
+      <div class="stat-lbl">Resume score</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-icon">📈</div>
+      <div class="stat-val c-a sk" id="st-impr" style="height:34px;width:60px">&nbsp;</div>
+      <div class="stat-lbl">Improvement rate</div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="section-hdr">Quick Actions</div>
+  <div class="actions-grid">
+    <a href="hr-interview.html" class="action-card blue-a">
+      <div class="action-icon">👥</div>
+      <div class="action-title">Start HR Interview</div>
+      <div class="action-sub">Behavioral & situational questions</div>
+      <span class="action-arrow">→</span>
+    </a>
+    <a href="technical-interview.html" class="action-card purple-a">
+      <div class="action-icon">💻</div>
+      <div class="action-title">Start Technical Interview</div>
+      <div class="action-sub">DSA, OOP, DBMS, OS, CN & Web Dev</div>
+      <span class="action-arrow">→</span>
+    </a>
+    <a href="resume.html" class="action-card green-a">
+      <div class="action-icon">📋</div>
+      <div class="action-title">Analyze Resume</div>
+      <div class="action-sub">Get your ATS score and AI feedback</div>
+      <span class="action-arrow">→</span>
+    </a>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom-grid">
+    <!-- Recent Activity -->
+    <div class="card">
+      <div class="section-hdr" style="margin-bottom:14px">Recent Activity</div>
+      <div id="activity-list">
+        <div class="activity-item"><div class="act-left"><div class="act-ico sk" style="width:36px;height:36px">&nbsp;</div><div><div class="sk" style="width:120px;height:13px;margin-bottom:5px">&nbsp;</div><div class="sk" style="width:80px;height:10px">&nbsp;</div></div></div><div class="sk" style="width:60px;height:24px;border-radius:6px">&nbsp;</div></div>
+        <div class="activity-item"><div class="act-left"><div class="act-ico sk" style="width:36px;height:36px">&nbsp;</div><div><div class="sk" style="width:120px;height:13px;margin-bottom:5px">&nbsp;</div><div class="sk" style="width:80px;height:10px">&nbsp;</div></div></div><div class="sk" style="width:60px;height:24px;border-radius:6px">&nbsp;</div></div>
+        <div class="activity-item"><div class="act-left"><div class="act-ico sk" style="width:36px;height:36px">&nbsp;</div><div><div class="sk" style="width:120px;height:13px;margin-bottom:5px">&nbsp;</div><div class="sk" style="width:80px;height:10px">&nbsp;</div></div></div><div class="sk" style="width:60px;height:24px;border-radius:6px">&nbsp;</div></div>
+      </div>
+    </div>
+    <!-- Recommendations -->
+    <div class="card">
+      <div class="section-hdr" style="margin-bottom:14px">💡 Recommendations</div>
+      <div id="rec-list">
+        <div class="sk" style="height:44px;margin-bottom:8px;border-radius:10px">&nbsp;</div>
+        <div class="sk" style="height:44px;margin-bottom:8px;border-radius:10px">&nbsp;</div>
+        <div class="sk" style="height:44px;border-radius:10px">&nbsp;</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API   = 'http://localhost:5000/api';
+const token = localStorage.getItem('sl_token');
+const user  = JSON.parse(localStorage.getItem('sl_user') || '{}');
+if (!token) { location.href = 'skilllens-landing.html'; }
+
+// Set user info from cache immediately
+if (user.fullName) {
+  const initials = user.fullName.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('sb-avatar').textContent  = initials;
+  document.getElementById('sb-name').textContent    = user.fullName;
+  document.getElementById('sb-email').textContent   = user.email || '';
+  document.getElementById('welcome-msg').textContent = `Welcome back, ${user.fullName.split(' ')[0]} 👋`;
+}
+
+function logout() {
+  localStorage.removeItem('sl_token');
+  localStorage.removeItem('sl_user');
+  location.href = 'skilllens-landing.html';
+}
+
+function removeSkeleton(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('sk');
+  el.style.height = '';
+  el.style.width  = '';
+  el.textContent  = value;
+}
+
+function scoreClass(s) { return s >= 75 ? 'score-high' : s >= 55 ? 'score-mid' : 'score-low'; }
+
+async function loadDashboard() {
+  try {
+    const r = await fetch(`${API}/dashboard`, { headers: { Authorization: 'Bearer ' + token } });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.message);
+    const dt = d.data;
+
+    removeSkeleton('st-interviews', dt.totalInterviews);
+    removeSkeleton('st-avg',        (dt.avgScore || 0) + '%');
+    removeSkeleton('st-resume',     dt.resumeScore || 'N/A');
+    removeSkeleton('st-impr',       (dt.improvementRate >= 0 ? '+' : '') + (dt.improvementRate || 0) + '%');
+    document.getElementById('st-int-change').textContent = dt.totalInterviews > 0 ? `${dt.totalInterviews} total sessions` : 'No sessions yet';
+
+    // Activity
+    const acts = dt.recentActivity || [];
+    const icons = { hr: '👥', technical: '💻', resume: '📄' };
+    const bg    = { hr: 'rgba(59,130,246,.15)', technical: 'rgba(139,92,246,.15)', resume: 'rgba(52,211,153,.15)' };
+    if (acts.length) {
+      document.getElementById('activity-list').innerHTML = acts.map(a => `
+        <div class="activity-item">
+          <div class="act-left">
+            <div class="act-ico" style="background:${bg[a.type]||bg.hr}">${icons[a.type]||'📝'}</div>
+            <div>
+              <div class="act-name">${(a.category || a.type || 'Interview').toUpperCase().replace('HR','HR')}</div>
+              <div class="act-time">${new Date(a.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+            </div>
+          </div>
+          <span class="score-badge ${scoreClass(a.score)}">${a.score || '--'}/100</span>
+        </div>`).join('');
+    } else {
+      document.getElementById('activity-list').innerHTML = `<div class="empty-state"><div class="e-icon">🎙️</div>No interviews yet.<br>Start your first session!</div>`;
+    }
+  } catch(e) {
+    removeSkeleton('st-interviews', '0');
+    removeSkeleton('st-avg', 'N/A');
+    removeSkeleton('st-resume', 'N/A');
+    removeSkeleton('st-impr', 'N/A');
+    document.getElementById('activity-list').innerHTML = `<div class="empty-state"><div class="e-icon">🎙️</div>Complete your first interview to see activity here.</div>`;
+  }
+}
+
+async function loadProfile() {
+  try {
+    const r = await fetch(`${API}/profile`, { headers: { Authorization: 'Bearer ' + token } });
+    const d = await r.json();
+    if (!r.ok) return;
+    const p = d.data;
+    const name = p.profile.fullName || user.fullName || 'User';
+    const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('sb-avatar').textContent    = initials;
+    document.getElementById('sb-name').textContent      = name;
+    document.getElementById('sb-email').textContent     = p.profile.email || '';
+    document.getElementById('welcome-msg').textContent  = `Welcome back, ${name.split(' ')[0]} 👋`;
+    document.getElementById('welcome-sub').textContent  = p.stats.streak > 0 ? `You're on a ${p.stats.streak}-day streak — keep it going!` : 'Ready for your next interview session?';
+    document.getElementById('streak-val').textContent   = p.stats.streak || 0;
+
+    // Recommendations
+    const recs = p.recommendations || [];
+    const recColors = { high:'#f87171', medium:'#fbbf24', low:'#34d399' };
+    const recBg     = { high:'rgba(239,68,68,.12)', medium:'rgba(251,191,36,.12)', low:'rgba(52,211,153,.12)' };
+    const recIcons  = { resume:'📄', practice:'🎙️', technical:'💻' };
+    const recLinks  = { resume:'resume.html', practice:'hr-interview.html', technical:'technical-interview.html' };
+    if (recs.length) {
+      document.getElementById('rec-list').innerHTML = recs.slice(0,4).map(rec => `
+        <a href="${recLinks[rec.type]||'#'}" class="rec-item">
+          <span style="font-size:18px">${recIcons[rec.type]||'💡'}</span>
+          <span style="flex:1;font-size:13px">${rec.text}</span>
+          <span class="rec-dot" style="background:${recColors[rec.priority]||recColors.medium}"></span>
+        </a>`).join('');
+    } else {
+      document.getElementById('rec-list').innerHTML = `
+        <a href="resume.html"           class="rec-item"><span>📄</span><span>Upload your resume to get started</span></a>
+        <a href="hr-interview.html"     class="rec-item"><span>🎙️</span><span>Practice HR interview questions</span></a>
+        <a href="technical-interview.html" class="rec-item"><span>💻</span><span>Try a technical interview</span></a>`;
+    }
+  } catch(e) {
+    document.getElementById('rec-list').innerHTML = `
+      <a href="resume.html"           class="rec-item"><span>📄</span><span>Upload your resume</span></a>
+      <a href="hr-interview.html"     class="rec-item"><span>🎙️</span><span>Start HR interview</span></a>
+      <a href="technical-interview.html" class="rec-item"><span>💻</span><span>Start technical interview</span></a>`;
+  }
+}
+
+loadDashboard();
+loadProfile();
+</script>
+</body></html>
