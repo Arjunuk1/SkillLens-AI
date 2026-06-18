@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Technical Interview — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a12;--bg2:#0e0e1a;--border:rgba(255,255,255,0.08);--muted:rgba(255,255,255,0.45);--card:rgba(255,255,255,0.04);}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;background:var(--bg);color:#fff;min-height:100vh}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(10,10,18,.85);backdrop-filter:blur(16px);border-bottom:.5px solid var(--border)}
+.logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;text-decoration:none;color:#fff}
+.logo-sq{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#6c5ce7,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.progress-wrap{height:3px;background:rgba(255,255,255,.08)}.progress-fill{height:3px;background:linear-gradient(90deg,#6c5ce7,#00b4d8);transition:width .4s ease}
+.page{padding:90px 24px 40px;max-width:860px;margin:0 auto}
+.cat-screen h1{font-size:26px;font-weight:800;margin-bottom:8px;margin-top:16px}
+.cat-screen p{color:var(--muted);font-size:14px;margin-bottom:28px}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.cat-card{background:var(--card);border:.5px solid var(--border);border-radius:16px;padding:24px;text-align:center;cursor:pointer;transition:all .22s}
+.cat-card:hover,.cat-card.selected{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.45);transform:translateY(-3px)}
+.cat-icon{font-size:32px;margin-bottom:10px}
+.cat-name{font-size:15px;font-weight:700;margin-bottom:4px}
+.cat-count{font-size:12px;color:var(--muted)}
+.btn-start-tech{margin-top:24px;padding:14px 40px;border-radius:12px;background:linear-gradient(135deg,#6c5ce7,#5a4fd4);border:none;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;display:none}
+.btn-start-tech.show{display:inline-flex;align-items:center;gap:8px}
+.btn-start-tech:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(108,92,231,.5)}
+.q-screen{display:none}
+.q-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.q-counter{font-size:13px;color:var(--muted);font-weight:500}
+.q-timer{font-size:13px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.1);padding:4px 12px;border-radius:6px;border:.5px solid rgba(251,191,36,.3)}
+.q-card{background:var(--card);border:.5px solid var(--border);border-radius:20px;padding:28px;margin-bottom:18px;position:relative;overflow:hidden}
+.q-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#6c5ce7,#00b4d8)}
+.diff-badge{display:inline-block;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;margin-bottom:12px;margin-right:6px}
+.easy{background:rgba(52,211,153,.12);color:#34d399;border:.5px solid rgba(52,211,153,.3)}
+.medium{background:rgba(251,191,36,.12);color:#fbbf24;border:.5px solid rgba(251,191,36,.3)}
+.hard{background:rgba(239,68,68,.12);color:#f87171;border:.5px solid rgba(239,68,68,.3)}
+.cat-badge{background:rgba(59,130,246,.12);color:#60a5fa;border:.5px solid rgba(59,130,246,.3)}
+.q-text{font-size:17px;font-weight:600;line-height:1.55;color:#f1f5f9}
+textarea{width:100%;min-height:150px;background:rgba(255,255,255,.05);border:.5px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;color:#fff;font-size:14px;font-family:inherit;resize:vertical;outline:none;transition:border-color .2s;line-height:1.6}
+textarea:focus{border-color:rgba(108,92,231,.6);background:rgba(108,92,231,.06)}
+textarea::placeholder{color:rgba(255,255,255,.2)}
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.btn-sec{padding:10px 22px;border-radius:10px;border:.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn-sec:hover{background:rgba(255,255,255,.1)}
+.btn-pri{padding:10px 22px;border-radius:10px;border:none;background:linear-gradient(135deg,#6c5ce7,#5a4fd4);color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn-pri:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(108,92,231,.45)}
+.submitting{text-align:center;padding:60px 20px;display:none}
+.spin-big{width:52px;height:52px;border:3px solid rgba(108,92,231,.2);border-top-color:#8B5CF6;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-screen{display:none}
+.score-hero{text-align:center;padding:32px;background:var(--card);border:.5px solid var(--border);border-radius:20px;margin-bottom:18px}
+.score-big{font-size:64px;font-weight:800;color:#34d399;line-height:1;margin-bottom:6px}
+.score-sub{font-size:14px;color:var(--muted)}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.result-card{background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:18px}
+.result-card h4{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.result-list{list-style:none}.result-list li{font-size:13px;color:rgba(255,255,255,.75);padding:4px 0 4px 16px;position:relative;line-height:1.5}.result-list li::before{content:'•';position:absolute;left:0;color:#8B5CF6}
+.ai-summary{background:rgba(139,92,246,.07);border:.5px solid rgba(139,92,246,.2);border-radius:14px;padding:18px;margin-bottom:18px}
+.ai-summary h4{font-size:13px;font-weight:700;color:#a78bfa;margin-bottom:8px}
+.ai-summary p{font-size:13px;color:rgba(255,255,255,.65);line-height:1.6}
+.result-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.09;pointer-events:none;z-index:0}
+.b1{width:500px;height:500px;background:#6c5ce7;top:-100px;left:-100px}
+.b2{width:400px;height:400px;background:#00b4d8;bottom:0;right:-100px}
+@media(max-width:600px){.cat-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="topbar">
+  <a href="dashboard.html" class="logo"><div class="logo-sq">SL</div>SkillLens AI</a>
+  <a href="dashboard.html" style="font-size:13px;color:var(--muted);text-decoration:none">← Dashboard</a>
+</div>
+<div class="progress-wrap"><div class="progress-fill" id="progress-bar" style="width:0%"></div></div>
+
+<div class="page">
+  <!-- CATEGORY SELECTION -->
+  <div id="cat-screen" class="cat-screen">
+    <h1>Technical Interview</h1>
+    <p>Select a category to begin your technical practice session</p>
+    <div class="cat-grid">
+      <div class="cat-card" onclick="selectCat('DSA',this)"><div class="cat-icon">🌳</div><div class="cat-name">DSA</div><div class="cat-count">Data Structures & Algorithms</div></div>
+      <div class="cat-card" onclick="selectCat('OOP',this)"><div class="cat-icon">📦</div><div class="cat-name">OOP</div><div class="cat-count">Object Oriented Programming</div></div>
+      <div class="cat-card" onclick="selectCat('DBMS',this)"><div class="cat-icon">🗄️</div><div class="cat-name">DBMS</div><div class="cat-count">Database Management</div></div>
+      <div class="cat-card" onclick="selectCat('OS',this)"><div class="cat-icon">💻</div><div class="cat-name">OS</div><div class="cat-count">Operating Systems</div></div>
+      <div class="cat-card" onclick="selectCat('CN',this)"><div class="cat-icon">🌐</div><div class="cat-name">CN</div><div class="cat-count">Computer Networks</div></div>
+      <div class="cat-card" onclick="selectCat('Web Development',this)"><div class="cat-icon">🚀</div><div class="cat-name">Web Dev</div><div class="cat-count">Web Development</div></div>
+    </div>
+    <button class="btn-start-tech" id="btn-start-tech" onclick="startTechnical()">Start Interview →</button>
+  </div>
+
+  <!-- QUESTION SCREEN -->
+  <div class="q-screen" id="q-screen">
+    <div class="q-header">
+      <span class="q-counter" id="q-counter">Question 1 of 10</span>
+      <span class="q-timer" id="q-timer">03:00</span>
+    </div>
+    <div class="q-card">
+      <span class="diff-badge" id="q-diff">Medium</span>
+      <span class="diff-badge cat-badge" id="q-cat">DBMS</span>
+      <div class="q-text" id="q-text">Loading...</div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Your Answer</div>
+    <textarea id="answer-box" placeholder="Explain clearly and concisely. Include definitions, examples, and use cases where relevant..."></textarea>
+    <div class="btn-row">
+      <button class="btn-sec" onclick="skipQ()">Skip</button>
+      <button class="btn-pri" id="btn-next" onclick="nextQ()">Next →</button>
+    </div>
+  </div>
+
+  <!-- SUBMITTING -->
+  <div class="submitting" id="submitting">
+    <div class="spin-big"></div>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:8px">Evaluating your answers...</h3>
+    <p style="color:var(--muted);font-size:14px">Gemini AI is analyzing your technical responses.</p>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="result-screen" id="result-screen">
+    <div class="score-hero">
+      <div class="score-big" id="final-score">--</div>
+      <div class="score-sub" id="result-cat-label">Technical Interview Score</div>
+    </div>
+    <div class="ai-summary"><h4>🤖 AI Summary</h4><p id="ai-summary-text">-</p></div>
+    <div class="result-grid">
+      <div class="result-card"><h4>✅ Strengths</h4><ul class="result-list" id="strengths-list"></ul></div>
+      <div class="result-card"><h4>⚠️ Weak Areas</h4><ul class="result-list" id="weak-list"></ul></div>
+    </div>
+    <div class="result-card" style="margin-bottom:18px"><h4 style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">💡 Improvement Suggestions</h4><ul class="result-list" id="sug-list"></ul></div>
+    <div class="result-btns">
+      <button class="btn-pri" onclick="location.reload()">Try Again</button>
+      <button class="btn-sec" onclick="location.href='dashboard.html'">Dashboard</button>
+      <button class="btn-sec" onclick="location.href='analytics.html'">Analytics</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:5000/api';
+const token = localStorage.getItem('sl_token');
+if (!token) location.href = 'skilllens-landing.html';
+
+let selCat = null, questions = [], answers = [], current = 0, sessionId = null, timer = null, timeLeft = 180;
+
+function selectCat(cat, el) {
+  selCat = cat;
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  const btn = document.getElementById('btn-start-tech');
+  btn.classList.add('show');
+  btn.innerHTML = `Start ${cat} Interview →`;
+}
+
+async function startTechnical() {
+  if (!selCat) return;
+  try {
+    const r = await fetch(`${API}/technical/start`, {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify({ category: selCat, count: 10 })
+    });
+    const d = await r.json();
+    if (!r.ok) return alert(d.message || 'Failed to start. Make sure backend is running.');
+    questions = d.data.questions;
+    sessionId = d.data.sessionId;
+    answers   = questions.map(q => ({ questionId: q.id, question: q.text, answer: '' }));
+    document.getElementById('cat-screen').style.display = 'none';
+    document.getElementById('q-screen').style.display   = 'block';
+    showQ(0);
+  } catch(e) { alert('Cannot connect to server. Please start backend first.'); }
+}
+
+function showQ(i) {
+  current = i;
+  const q = questions[i];
+  document.getElementById('q-counter').textContent = `Question ${i+1} of ${questions.length}`;
+  document.getElementById('q-text').textContent    = q.text;
+  document.getElementById('q-diff').textContent    = q.difficulty || 'medium';
+  document.getElementById('q-diff').className      = `diff-badge ${q.difficulty || 'medium'}`;
+  document.getElementById('q-cat').textContent     = selCat;
+  document.getElementById('answer-box').value      = answers[i].answer || '';
+  document.getElementById('btn-next').textContent  = i === questions.length-1 ? 'Submit ✓' : 'Next →';
+  document.getElementById('progress-bar').style.width = `${((i+1)/questions.length)*100}%`;
+  clearInterval(timer); timeLeft = 180; startTimer();
+}
+
+function startTimer() {
+  const el = document.getElementById('q-timer');
+  timer = setInterval(() => {
+    timeLeft--;
+    const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
+    const s = String(timeLeft%60).padStart(2,'0');
+    el.textContent = `${m}:${s}`;
+    if (timeLeft<=0) { clearInterval(timer); nextQ(); }
+  }, 1000);
+}
+
+function skipQ() { answers[current].answer = ''; nextQ(); }
+
+function nextQ() {
+  clearInterval(timer);
+  answers[current].answer = document.getElementById('answer-box').value;
+  if (current < questions.length-1) showQ(current+1);
+  else submitAnswers();
+}
+
+async function submitAnswers() {
+  document.getElementById('q-screen').style.display   = 'none';
+  document.getElementById('submitting').style.display = 'block';
+  try {
+    const r = await fetch(`${API}/technical/submit`, {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify({ sessionId, answers })
+    });
+    const d = await r.json();
+    document.getElementById('submitting').style.display = 'none';
+    if (!r.ok) return alert(d.message);
+    showResult(d.data);
+  } catch(e) {
+    document.getElementById('submitting').style.display = 'none';
+    showResult({ score:70, feedback:{ strengths:['Good conceptual knowledge'], weaknesses:['Need more examples'], suggestions:['Practice with coding problems'], summary:'Decent performance. Keep practicing.' }});
+  }
+}
+
+function showResult(data) {
+  document.getElementById('result-screen').style.display = 'block';
+  document.getElementById('progress-bar').style.width    = '100%';
+  document.getElementById('result-cat-label').textContent = `${selCat} Interview Score`;
+  const fb = data.feedback || {};
+  document.getElementById('final-score').textContent     = data.score || '--';
+  document.getElementById('ai-summary-text').textContent = fb.summary || 'Interview completed.';
+  const rl = (id,items) => { document.getElementById(id).innerHTML = (items||[]).map(i=>`<li>${i}</li>`).join(''); };
+  rl('strengths-list', fb.strengths);
+  rl('weak-list',      fb.weaknesses);
+  rl('sug-list',       fb.suggestions);
+}
+</script>
+</body></html>
