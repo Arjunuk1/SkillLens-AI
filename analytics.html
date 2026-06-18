@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Analytics — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--bg:#0a0a12;--bg2:#0e0e1a;--border:rgba(255,255,255,0.08);--muted:rgba(255,255,255,0.45);--card:rgba(255,255,255,0.04);}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;background:var(--bg);color:#fff;min-height:100vh}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(10,10,18,.85);backdrop-filter:blur(16px);border-bottom:.5px solid var(--border)}
+.logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;text-decoration:none;color:#fff}
+.logo-sq{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#6c5ce7,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.page{padding:90px 28px 40px;max-width:1100px;margin:0 auto}
+.page-title{font-size:24px;font-weight:800;margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat{background:var(--card);border:.5px solid var(--border);border-radius:16px;padding:20px}
+.stat-icon{font-size:20px;margin-bottom:8px}
+.stat-val{font-size:28px;font-weight:800;margin-bottom:4px}
+.stat-lbl{font-size:12px;color:var(--muted);font-weight:500}
+.c-b{color:#60a5fa}.c-p{color:#a78bfa}.c-g{color:#34d399}.c-a{color:#fbbf24}.c-r{color:#f87171}
+.charts-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:20px}
+.chart-card{background:var(--card);border:.5px solid var(--border);border-radius:18px;padding:22px}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:16px;color:rgba(255,255,255,.8)}
+.chart-wrap{position:relative;height:220px}
+.area-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+.activity-card{background:var(--card);border:.5px solid var(--border);border-radius:18px;padding:22px}
+.activity-title{font-size:14px;font-weight:700;margin-bottom:16px;color:rgba(255,255,255,.8)}
+.activity-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:.5px solid var(--border)}
+.activity-item:last-child{border-bottom:none}
+.act-left{display:flex;align-items:center;gap:12px}
+.act-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.act-name{font-size:13px;font-weight:600}
+.act-date{font-size:11px;color:var(--muted);margin-top:2px}
+.act-score{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:700;background:rgba(52,211,153,.12);color:#34d399;border:.5px solid rgba(52,211,153,.3)}
+.highlights{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hl{background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:16px}
+.hl h4{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.hl-val{font-size:18px;font-weight:800}
+.skeleton{background:linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.05) 75%);background-size:200% 100%;animation:sk 1.5s infinite;border-radius:8px;height:20px;margin-bottom:8px}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.08;pointer-events:none;z-index:0}
+.b1{width:500px;height:500px;background:#6c5ce7;top:-100px;left:-100px}
+.b2{width:400px;height:400px;background:#00b4d8;bottom:0;right:-100px}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px}
+@media(max-width:700px){.stats-row,.area-row{grid-template-columns:1fr 1fr}.charts-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="topbar">
+  <a href="dashboard.html" class="logo"><div class="logo-sq">SL</div>SkillLens AI</a>
+  <a href="dashboard.html" style="font-size:13px;color:var(--muted);text-decoration:none">← Dashboard</a>
+</div>
+<div class="page">
+  <div class="page-title">Performance Analytics</div>
+  <div class="page-sub">Track your progress, identify weak areas, and celebrate your growth</div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-icon">🎙️</div><div class="stat-val c-b" id="st-total">-</div><div class="stat-lbl">Interviews taken</div></div>
+    <div class="stat"><div class="stat-icon">⭐</div><div class="stat-val c-p" id="st-avg">-</div><div class="stat-lbl">Average score</div></div>
+    <div class="stat"><div class="stat-icon">📈</div><div class="stat-val c-g" id="st-impr">-</div><div class="stat-lbl">Improvement</div></div>
+    <div class="stat"><div class="stat-icon">📄</div><div class="stat-val c-a" id="st-resume">-</div><div class="stat-lbl">Resume score</div></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">📊 Score Trend</div>
+      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🥧 Category Breakdown</div>
+      <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="area-row">
+    <div class="chart-card">
+      <div class="chart-title">🕸️ Skill Radar</div>
+      <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+    </div>
+    <div class="chart-card" style="grid-column:span 2">
+      <div class="chart-title">📋 Category Performance</div>
+      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">
+    <div class="activity-card">
+      <div class="activity-title">🕐 Recent Activity</div>
+      <div id="activity-list"><div class="empty">No interviews yet. Start practicing!</div></div>
+    </div>
+    <div class="activity-card">
+      <div class="activity-title">🏆 Highlights</div>
+      <div class="highlights">
+        <div class="hl"><h4>Strongest Area</h4><div class="hl-val c-g" id="hl-strong">-</div></div>
+        <div class="hl"><h4>Weakest Area</h4><div class="hl-val c-r" id="hl-weak">-</div></div>
+        <div class="hl"><h4>Best Score</h4><div class="hl-val c-a" id="hl-best">-</div></div>
+        <div class="hl"><h4>Sessions This Week</h4><div class="hl-val c-b" id="hl-week">-</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API   = 'http://localhost:5000/api';
+const token = localStorage.getItem('sl_token');
+if (!token) location.href = 'skilllens-landing.html';
+
+const chartDefaults = {
+  plugins:{ legend:{ labels:{ color:'rgba(255,255,255,0.5)', font:{ size:11 }}}},
+  scales:{ x:{ ticks:{ color:'rgba(255,255,255,0.35)', font:{ size:10 }}, grid:{ color:'rgba(255,255,255,0.05)'}}, y:{ ticks:{ color:'rgba(255,255,255,0.35)', font:{ size:10 }}, grid:{ color:'rgba(255,255,255,0.05)'}}}
+};
+
+async function load() {
+  try {
+    const r  = await fetch(`${API}/analytics`, { headers:{ Authorization:'Bearer '+token }});
+    const d  = await r.json();
+    if (!r.ok) throw new Error(d.message);
+    const dt = d.data;
+
+    // Stats
+    document.getElementById('st-total').textContent  = dt.overview.totalInterviews;
+    document.getElementById('st-avg').textContent    = dt.overview.avgScore + '%';
+    document.getElementById('st-impr').textContent   = (dt.overview.improvement > 0 ? '+':'') + dt.overview.improvement + '%';
+    document.getElementById('st-resume').textContent = dt.overview.resumeScore || 'N/A';
+    document.getElementById('hl-strong').textContent = dt.overview.strongest;
+    document.getElementById('hl-weak').textContent   = dt.overview.weakest;
+
+    // Best score
+    const best = dt.scoreTrend.length ? Math.max(...dt.scoreTrend.map(s=>s.score)) : 0;
+    document.getElementById('hl-best').textContent   = best ? best + '%' : 'N/A';
+
+    // Sessions this week
+    const now  = Date.now(), week = 7*24*3600*1000;
+    const wkSessions = dt.recentActivity.filter(a => now - new Date(a.date).getTime() < week).length;
+    document.getElementById('hl-week').textContent   = wkSessions;
+
+    // Line chart
+    new Chart(document.getElementById('lineChart'), {
+      type:'line',
+      data:{ labels: dt.scoreTrend.map(s=>s.session), datasets:[{ label:'Score', data: dt.scoreTrend.map(s=>s.score), borderColor:'#6c5ce7', backgroundColor:'rgba(108,92,231,0.1)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#8B5CF6', tension:.35, fill:true }]},
+      options:{ responsive:true, maintainAspectRatio:false, ...chartDefaults, scales:{ ...chartDefaults.scales, y:{ ...chartDefaults.scales.y, min:0, max:100 }}}
+    });
+
+    // Pie chart
+    const cats = dt.categoryScores;
+    if (cats.length) {
+      new Chart(document.getElementById('pieChart'), {
+        type:'doughnut',
+        data:{ labels: cats.map(c=>c.category), datasets:[{ data: cats.map(c=>c.avgScore), backgroundColor:['#60a5fa','#a78bfa','#34d399','#fbbf24','#f472b6','#22d3ee'], borderWidth:0 }]},
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ color:'rgba(255,255,255,0.5)', font:{ size:10 }, padding:10 }}}}
+      });
+    }
+
+    // Radar chart
+    const r2 = dt.radar;
+    new Chart(document.getElementById('radarChart'), {
+      type:'radar',
+      data:{ labels:['Communication','Technical','Confidence','Clarity','Problem Solving'], datasets:[{ label:'Skills', data:[r2.communication, r2.technicalScore, r2.confidence, r2.clarity, r2.problemSolving], backgroundColor:'rgba(139,92,246,0.15)', borderColor:'#8B5CF6', borderWidth:1.5, pointBackgroundColor:'#8B5CF6', pointRadius:3 }]},
+      options:{ responsive:true, maintainAspectRatio:false, scales:{ r:{ ticks:{ display:false }, grid:{ color:'rgba(255,255,255,0.08)' }, pointLabels:{ color:'rgba(255,255,255,0.45)', font:{ size:10 }}, min:0, max:100 }}, plugins:{ legend:{ display:false }}}
+    });
+
+    // Bar chart
+    if (cats.length) {
+      new Chart(document.getElementById('barChart'), {
+        type:'bar',
+        data:{ labels: cats.map(c=>c.category), datasets:[{ label:'Avg Score', data: cats.map(c=>c.avgScore), backgroundColor: cats.map(c => c.avgScore>=80?'rgba(52,211,153,0.7)':c.avgScore>=60?'rgba(251,191,36,0.7)':'rgba(239,68,68,0.7)'), borderRadius:6 }]},
+        options:{ responsive:true, maintainAspectRatio:false, ...chartDefaults, scales:{ ...chartDefaults.scales, y:{ ...chartDefaults.scales.y, min:0, max:100 }}, plugins:{ legend:{ display:false }}}
+      });
+    }
+
+    // Activity list
+    if (dt.recentActivity.length) {
+      const icons = { hr:'👥', technical:'💻' };
+      document.getElementById('activity-list').innerHTML = dt.recentActivity.map(a => `
+        <div class="activity-item">
+          <div class="act-left">
+            <div class="act-icon" style="background:rgba(139,92,246,0.15)">${icons[a.type]||'📝'}</div>
+            <div>
+              <div class="act-name">${a.category || a.type.toUpperCase()} Interview</div>
+              <div class="act-date">${new Date(a.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+            </div>
+          </div>
+          <span class="act-score">${a.score || '--'}/100</span>
+        </div>`).join('');
+    }
+  } catch(e) {
+    // Show sample data if no backend
+    document.getElementById('st-total').textContent  = '0';
+    document.getElementById('st-avg').textContent    = 'N/A';
+    document.getElementById('st-impr').textContent   = 'N/A';
+    document.getElementById('st-resume').textContent = 'N/A';
+    document.getElementById('hl-strong').textContent = 'N/A';
+    document.getElementById('hl-weak').textContent   = 'N/A';
+    document.getElementById('hl-best').textContent   = 'N/A';
+    document.getElementById('hl-week').textContent   = '0';
+    // Draw empty charts
+    ['lineChart','pieChart','radarChart','barChart'].forEach(id => {
+      new Chart(document.getElementById(id), { type: id==='radarChart'?'radar':id==='pieChart'?'doughnut':'bar', data:{ labels:['No Data'], datasets:[{ data:[0] }]}, options:{ responsive:true, maintainAspectRatio:false }});
+    });
+  }
+}
+load();
+</script>
+</body></html>
