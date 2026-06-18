@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Profile — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a12;--bg2:#0e0e1a;--border:rgba(255,255,255,0.08);--muted:rgba(255,255,255,0.45);--card:rgba(255,255,255,0.04);}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;background:var(--bg);color:#fff;min-height:100vh}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(10,10,18,.85);backdrop-filter:blur(16px);border-bottom:.5px solid var(--border)}
+.logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;text-decoration:none;color:#fff}
+.logo-sq{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#6c5ce7,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.page{padding:90px 28px 40px;max-width:900px;margin:0 auto}
+.profile-banner{background:linear-gradient(135deg,rgba(108,92,231,.2),rgba(0,180,216,.1));border:.5px solid rgba(139,92,246,.3);border-radius:22px;padding:32px;display:flex;align-items:center;gap:24px;margin-bottom:22px;position:relative;overflow:hidden}
+.profile-banner::before{content:'';position:absolute;top:0;right:0;width:300px;height:100%;background:radial-gradient(ellipse at right,rgba(108,92,231,.15),transparent 70%);pointer-events:none}
+.avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#6c5ce7,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;flex-shrink:0;border:2px solid rgba(139,92,246,.4)}
+.profile-info h2{font-size:22px;font-weight:800;margin-bottom:4px}
+.profile-info p{font-size:13px;color:var(--muted);margin-bottom:12px}
+.prof-tags{display:flex;gap:8px;flex-wrap:wrap}
+.ptag{padding:3px 12px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(139,92,246,.12);color:#a78bfa;border:.5px solid rgba(139,92,246,.3)}
+.edit-btn{margin-left:auto;padding:9px 20px;border-radius:10px;border:.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;flex-shrink:0}
+.edit-btn:hover{background:rgba(255,255,255,.1)}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.stat{background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:16px;text-align:center}
+.stat-val{font-size:26px;font-weight:800;margin-bottom:3px}
+.stat-lbl{font-size:11px;color:var(--muted);font-weight:500}
+.c-b{color:#60a5fa}.c-p{color:#a78bfa}.c-g{color:#34d399}.c-a{color:#fbbf24}
+.section-title{font-size:15px;font-weight:700;margin-bottom:14px;color:rgba(255,255,255,.8)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px}
+.card{background:var(--card);border:.5px solid var(--border);border-radius:18px;padding:22px}
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ach{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.03);border:.5px solid var(--border);border-radius:12px}
+.ach-icon{font-size:24px;flex-shrink:0}
+.ach-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.ach-desc{font-size:11px;color:var(--muted)}
+.ach.locked{opacity:.38}
+.rec-list{display:flex;flex-direction:column;gap:10px}
+.rec{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.03);border:.5px solid var(--border);border-radius:12px}
+.rec-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.rec-text{font-size:13px;font-weight:500}
+.rec-pri{font-size:11px;margin-top:2px;font-weight:600}
+.high{color:#f87171}.medium{color:#fbbf24}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.info-item label{display:block;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+.info-item input{width:100%;padding:10px 14px;background:rgba(255,255,255,.05);border:.5px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.info-item input:focus{border-color:rgba(108,92,231,.6)}
+.info-item input:disabled{opacity:.6;cursor:not-allowed}
+.save-btn{margin-top:16px;padding:10px 28px;border-radius:10px;border:none;background:linear-gradient(135deg,#6c5ce7,#5a4fd4);color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;display:none}
+.save-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(108,92,231,.4)}
+.blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.09;pointer-events:none;z-index:0}
+.b1{width:500px;height:500px;background:#6c5ce7;top:-100px;left:-100px}
+.b2{width:400px;height:400px;background:#00b4d8;bottom:0;right:-100px}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;background:rgba(52,211,153,.15);border:.5px solid rgba(52,211,153,.4);color:#34d399;backdrop-filter:blur(12px);transform:translateY(20px);opacity:0;transition:all .3s;z-index:200}
+.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:600px){.stats-row,.grid-2,.ach-grid,.info-grid{grid-template-columns:1fr 1fr}.profile-banner{flex-wrap:wrap}.edit-btn{margin-left:0}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="topbar">
+  <a href="dashboard.html" class="logo"><div class="logo-sq">SL</div>SkillLens AI</a>
+  <a href="dashboard.html" style="font-size:13px;color:var(--muted);text-decoration:none">← Dashboard</a>
+</div>
+<div id="toast" class="toast"></div>
+
+<div class="page">
+  <div class="profile-banner">
+    <div class="avatar" id="avatar-initials">AK</div>
+    <div class="profile-info">
+      <h2 id="prof-name">Loading...</h2>
+      <p id="prof-sub">--</p>
+      <div class="prof-tags">
+        <span class="ptag" id="prof-branch">CSE</span>
+        <span class="ptag" id="prof-year">3rd Year</span>
+        <span class="ptag" id="prof-college">IIT Delhi</span>
+      </div>
+    </div>
+    <button class="edit-btn" onclick="toggleEdit()">✏️ Edit Profile</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val c-b" id="s-interviews">-</div><div class="stat-lbl">Interviews</div></div>
+    <div class="stat"><div class="stat-val c-p" id="s-avg">-</div><div class="stat-lbl">Avg Score</div></div>
+    <div class="stat"><div class="stat-val c-a" id="s-streak">-</div><div class="stat-lbl">Day Streak 🔥</div></div>
+    <div class="stat"><div class="stat-val c-g" id="s-resume">-</div><div class="stat-lbl">Resume Score</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">🏅 Achievements</div>
+      <div class="ach-grid" id="ach-grid">
+        <div class="ach locked"><div class="ach-icon">🎯</div><div><div class="ach-title">First Step</div><div class="ach-desc">Complete first interview</div></div></div>
+        <div class="ach locked"><div class="ach-icon">🔥</div><div><div class="ach-title">Consistent</div><div class="ach-desc">10 interviews done</div></div></div>
+        <div class="ach locked"><div class="ach-icon">⭐</div><div><div class="ach-title">Interview Pro</div><div class="ach-desc">25 interviews done</div></div></div>
+        <div class="ach locked"><div class="ach-icon">🏆</div><div><div class="ach-title">Elite</div><div class="ach-desc">50 interviews done</div></div></div>
+        <div class="ach locked"><div class="ach-icon">📄</div><div><div class="ach-title">Resume Ready</div><div class="ach-desc">Upload resume</div></div></div>
+        <div class="ach locked"><div class="ach-icon">🎖️</div><div><div class="ach-title">ATS Champion</div><div class="ach-desc">Resume score &gt; 80</div></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">💡 Personalized Recommendations</div>
+      <div class="rec-list" id="rec-list">
+        <div class="rec"><div class="rec-icon" style="background:rgba(239,68,68,.12);color:#f87171">📄</div><div><div class="rec-text">Upload your resume to get started</div><div class="rec-pri high">High priority</div></div></div>
+        <div class="rec"><div class="rec-icon" style="background:rgba(59,130,246,.12);color:#60a5fa">🎙️</div><div><div class="rec-text">Practice HR questions to build confidence</div><div class="rec-pri medium">Medium priority</div></div></div>
+        <div class="rec"><div class="rec-icon" style="background:rgba(139,92,246,.12);color:#a78bfa">💻</div><div><div class="rec-text">Try DSA questions to sharpen your skills</div><div class="rec-pri medium">Medium priority</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">👤 Edit Profile</div>
+    <div class="info-grid">
+      <div class="info-item"><label>Full name</label><input id="inp-name" disabled></div>
+      <div class="info-item"><label>Email</label><input id="inp-email" disabled></div>
+      <div class="info-item"><label>College</label><input id="inp-college" disabled placeholder="Your college"></div>
+      <div class="info-item"><label>Branch</label><input id="inp-branch" disabled placeholder="Your branch"></div>
+      <div class="info-item"><label>Year</label><input id="inp-year" type="number" min="1" max="5" disabled placeholder="1-5"></div>
+    </div>
+    <button class="save-btn" id="save-btn" onclick="saveProfile()">Save Changes</button>
+  </div>
+</div>
+
+<script>
+const API   = 'http://localhost:5000/api';
+const token = localStorage.getItem('sl_token');
+if (!token) location.href = 'skilllens-landing.html';
+
+let editing = false;
+
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background   = type==='ok' ? 'rgba(52,211,153,.15)' : 'rgba(239,68,68,.13)';
+  t.style.borderColor  = type==='ok' ? 'rgba(52,211,153,.4)'  : 'rgba(239,68,68,.4)';
+  t.style.color        = type==='ok' ? '#34d399' : '#f87171';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function toggleEdit() {
+  editing = !editing;
+  ['inp-name','inp-college','inp-branch','inp-year'].forEach(id => {
+    document.getElementById(id).disabled = !editing;
+  });
+  document.getElementById('save-btn').style.display = editing ? 'inline-block' : 'none';
+  document.querySelector('.edit-btn').textContent = editing ? '✕ Cancel' : '✏️ Edit Profile';
+}
+
+async function saveProfile() {
+  const body = {
+    fullName: document.getElementById('inp-name').value,
+    college:  document.getElementById('inp-college').value,
+    branch:   document.getElementById('inp-branch').value,
+    year:     parseInt(document.getElementById('inp-year').value) || undefined,
+  };
+  try {
+    const r = await fetch(`${API}/profile`, { method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify(body) });
+    const d = await r.json();
+    if (r.ok) { toast('Profile updated!'); toggleEdit(); load(); }
+    else toast(d.message || 'Failed to update', 'err');
+  } catch { toast('Server error', 'err'); }
+}
+
+async function load() {
+  try {
+    const r  = await fetch(`${API}/profile`, { headers:{ Authorization:'Bearer '+token }});
+    const d  = await r.json();
+    if (!r.ok) throw new Error(d.message);
+    const p  = d.data;
+
+    // Banner
+    const name   = p.profile.fullName || 'User';
+    const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('avatar-initials').textContent = initials;
+    document.getElementById('prof-name').textContent  = name;
+    document.getElementById('prof-sub').textContent   = p.profile.email;
+    document.getElementById('prof-branch').textContent = p.profile.branch   || 'N/A';
+    document.getElementById('prof-year').textContent   = p.profile.year ? `${p.profile.year}${['st','nd','rd','th'][Math.min(p.profile.year-1,3)]} Year` : 'N/A';
+    document.getElementById('prof-college').textContent = p.profile.college || 'N/A';
+
+    // Stats
+    document.getElementById('s-interviews').textContent = p.stats.totalInterviews;
+    document.getElementById('s-avg').textContent        = p.stats.avgScore + '%';
+    document.getElementById('s-streak').textContent     = p.stats.streak;
+    document.getElementById('s-resume').textContent     = p.stats.resumeScore || 'N/A';
+
+    // Form inputs
+    document.getElementById('inp-name').value    = p.profile.fullName || '';
+    document.getElementById('inp-email').value   = p.profile.email    || '';
+    document.getElementById('inp-college').value = p.profile.college  || '';
+    document.getElementById('inp-branch').value  = p.profile.branch   || '';
+    document.getElementById('inp-year').value    = p.profile.year     || '';
+
+    // Achievements
+    const achGrid = document.getElementById('ach-grid');
+    const allAch  = [
+      { id:'first_interview', icon:'🎯', title:'First Step',       desc:'Complete first interview' },
+      { id:'ten_interviews',  icon:'🔥', title:'Consistent',       desc:'10 interviews done' },
+      { id:'twenty_five',     icon:'⭐', title:'Interview Pro',    desc:'25 interviews done' },
+      { id:'fifty',           icon:'🏆', title:'Elite',            desc:'50 interviews done' },
+      { id:'resume_uploaded', icon:'📄', title:'Resume Ready',     desc:'Upload resume' },
+      { id:'ats_80',          icon:'🎖️', title:'ATS Champion',    desc:'Resume score > 80' },
+    ];
+    const earned = new Set((p.achievements||[]).map(a=>a.id));
+    achGrid.innerHTML = allAch.map(a => `
+      <div class="ach ${earned.has(a.id)?'':'locked'}">
+        <div class="ach-icon">${a.icon}</div>
+        <div><div class="ach-title">${a.title}</div><div class="ach-desc">${a.desc}</div></div>
+      </div>`).join('');
+
+    // Recommendations
+    const recs = p.recommendations || [];
+    if (recs.length) {
+      const icons = { resume:'📄', practice:'🎙️', technical:'💻' };
+      const bgMap = { high:'rgba(239,68,68,.12)', medium:'rgba(59,130,246,.12)', low:'rgba(52,211,153,.12)' };
+      const colMap = { high:'#f87171', medium:'#60a5fa', low:'#34d399' };
+      document.getElementById('rec-list').innerHTML = recs.map(r => `
+        <div class="rec">
+          <div class="rec-icon" style="background:${bgMap[r.priority]||bgMap.medium};color:${colMap[r.priority]||colMap.medium}">${icons[r.type]||'💡'}</div>
+          <div><div class="rec-text">${r.text}</div><div class="rec-pri ${r.priority}">${r.priority} priority</div></div>
+        </div>`).join('');
+    }
+  } catch(e) {
+    // Fallback from localStorage
+    const user = JSON.parse(localStorage.getItem('sl_user')||'{}');
+    if (user.fullName) {
+      document.getElementById('avatar-initials').textContent = user.fullName.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      document.getElementById('prof-name').textContent  = user.fullName;
+      document.getElementById('prof-sub').textContent   = user.email;
+      document.getElementById('inp-name').value  = user.fullName;
+      document.getElementById('inp-email').value = user.email;
+    }
+  }
+}
+load();
+</script>
+</body></html>
