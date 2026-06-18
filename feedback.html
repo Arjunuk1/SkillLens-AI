@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Feedback — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--bg:#0a0a12;--bg2:#0e0e1a;--border:rgba(255,255,255,0.08);--muted:rgba(255,255,255,0.45);--card:rgba(255,255,255,0.04);}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;background:var(--bg);color:#fff;min-height:100vh}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(10,10,18,.88);backdrop-filter:blur(16px);border-bottom:.5px solid var(--border)}
+.logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;text-decoration:none;color:#fff}
+.logo-sq{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#6c5ce7,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.page{padding:90px 28px 48px;max-width:1000px;margin:0 auto}
+.page-title{font-size:24px;font-weight:800;margin-bottom:4px;margin-top:8px}
+.page-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.score-banner{background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(59,130,246,.08));border:.5px solid rgba(52,211,153,.3);border-radius:22px;padding:32px;display:flex;align-items:center;gap:32px;margin-bottom:22px}
+.score-circle{text-align:center;flex-shrink:0}
+.score-num{font-size:56px;font-weight:800;color:#34d399;line-height:1}
+.score-lbl{font-size:13px;color:var(--muted);margin-top:4px;font-weight:500}
+.score-info h2{font-size:18px;font-weight:700;margin-bottom:8px}
+.score-info p{font-size:14px;color:var(--muted);line-height:1.6}
+.improvement-plan{background:rgba(59,130,246,.07);border:.5px solid rgba(59,130,246,.25);border-radius:12px;padding:14px 18px;margin-top:12px}
+.improvement-plan h4{font-size:12px;font-weight:700;color:#60a5fa;margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+.plan-steps{list-style:none;display:flex;flex-direction:column;gap:4px}
+.plan-steps li{font-size:13px;color:rgba(255,255,255,.7);padding-left:16px;position:relative}
+.plan-steps li::before{content:'→';position:absolute;left:0;color:#60a5fa}
+.metrics-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+.metric{background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:16px;text-align:center}
+.metric-val{font-size:24px;font-weight:800;color:#60a5fa;margin-bottom:4px}
+.metric-lbl{font-size:11px;color:var(--muted);font-weight:500}
+.two-col{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;margin-bottom:20px}
+.card{background:var(--card);border:.5px solid var(--border);border-radius:18px;padding:22px}
+.card-title{font-size:14px;font-weight:700;margin-bottom:16px;color:rgba(255,255,255,.85)}
+.fb-list{list-style:none}
+.fb-list li{font-size:13px;color:rgba(255,255,255,.72);padding:6px 0 6px 18px;position:relative;line-height:1.5;border-bottom:.5px solid var(--border)}
+.fb-list li:last-child{border-bottom:none}
+.fb-list li::before{position:absolute;left:0}
+.str li::before{content:'✅';font-size:11px}.wk li::before{content:'⚠️';font-size:11px}.sg li::before{content:'💡';font-size:11px}
+.radar-wrap{position:relative;height:240px}
+.history-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.hist-card{background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .18s;text-decoration:none;color:inherit}
+.hist-card:hover{border-color:rgba(139,92,246,.4);transform:translateY(-2px)}
+.hc-left{display:flex;align-items:center;gap:12px}
+.hc-icon{font-size:22px}
+.hc-type{font-size:13px;font-weight:700;margin-bottom:2px}
+.hc-date{font-size:11px;color:var(--muted)}
+.hc-score{font-size:15px;font-weight:800}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap}
+.btn-pri{padding:11px 26px;border-radius:11px;border:none;background:linear-gradient(135deg,#6c5ce7,#5a4fd4);color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center}
+.btn-pri:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(108,92,231,.4)}
+.btn-sec{padding:11px 26px;border-radius:11px;border:.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center}
+.btn-sec:hover{background:rgba(255,255,255,.1)}
+.empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px}
+.blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.09;pointer-events:none;z-index:0}
+.b1{width:500px;height:500px;background:#6c5ce7;top:-100px;left:-100px}
+.b2{width:400px;height:400px;background:#00b4d8;bottom:0;right:-100px}
+@media(max-width:640px){.metrics-grid{grid-template-columns:1fr 1fr}.two-col,.history-grid{grid-template-columns:1fr}.score-banner{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="topbar">
+  <a href="dashboard.html" class="logo"><div class="logo-sq">SL</div>SkillLens AI</a>
+  <a href="dashboard.html" style="font-size:13px;color:var(--muted);text-decoration:none">← Dashboard</a>
+</div>
+<div class="page">
+  <div class="page-title">AI Feedback</div>
+  <div class="page-sub">Detailed performance analysis powered by Gemini AI</div>
+
+  <!-- Latest feedback -->
+  <div id="latest-feedback">
+    <div class="empty">
+      <div style="font-size:40px;margin-bottom:14px">🤖</div>
+      <p>No feedback yet. Complete an interview to see your AI analysis.</p>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+        <a href="hr-interview.html"          class="btn-pri">Start HR Interview</a>
+        <a href="technical-interview.html"   class="btn-sec">Start Technical Interview</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div style="margin-top:32px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;color:rgba(255,255,255,.85)">Feedback History</div>
+    <div class="history-grid" id="history-grid">
+      <div class="empty" style="grid-column:span 2;padding:24px">No previous feedback found.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API   = 'http://localhost:5000/api';
+const token = localStorage.getItem('sl_token');
+if (!token) location.href = 'skilllens-landing.html';
+
+let radarChart = null;
+
+function renderFeedback(fb, iv) {
+  const typeLabel = iv ? ((iv.category || iv.type || 'Interview').toUpperCase()) : 'Interview';
+  const score     = fb.score || 0;
+  const scoreColor= score>=75?'#34d399':score>=55?'#fbbf24':'#f87171';
+
+  document.getElementById('latest-feedback').innerHTML = `
+    <div class="score-banner">
+      <div class="score-circle">
+        <div class="score-num" style="color:${scoreColor}">${score}</div>
+        <div class="score-lbl">/ 100 — ${typeLabel}</div>
+      </div>
+      <div class="score-info">
+        <h2>Your Feedback Report</h2>
+        <p>${fb.aiSummary || 'Your interview has been evaluated by Gemini AI. Review the detailed breakdown below.'}</p>
+        ${(fb.improvementPlan||[]).length?`<div class="improvement-plan"><h4>📋 Improvement Plan</h4><ul class="plan-steps">${fb.improvementPlan.slice(0,3).map(s=>`<li>${s}</li>`).join('')}</ul></div>`:''}
+      </div>
+    </div>
+    <div class="metrics-grid">
+      <div class="metric"><div class="metric-val" style="color:#60a5fa">${fb.communication||score}</div><div class="metric-lbl">Communication</div></div>
+      <div class="metric"><div class="metric-val" style="color:#a78bfa">${fb.technicalScore||score}</div><div class="metric-lbl">Technical</div></div>
+      <div class="metric"><div class="metric-val" style="color:#34d399">${fb.confidence||score}</div><div class="metric-lbl">Confidence</div></div>
+      <div class="metric"><div class="metric-val" style="color:#fbbf24">${fb.clarity||score}</div><div class="metric-lbl">Clarity</div></div>
+      <div class="metric"><div class="metric-val" style="color:#f472b6">${fb.problemSolving||score}</div><div class="metric-lbl">Problem Solving</div></div>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">✅ Strengths</div>
+          <ul class="fb-list str" id="str-list">${(fb.strengths||['Good effort']).map(s=>`<li>${s}</li>`).join('')}</ul>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">⚠️ Areas to Improve</div>
+          <ul class="fb-list wk">${(fb.weaknesses||['Keep practicing']).map(s=>`<li>${s}</li>`).join('')}</ul>
+        </div>
+        <div class="card">
+          <div class="card-title">💡 Suggestions</div>
+          <ul class="fb-list sg">${(fb.suggestions||['Review fundamentals']).map(s=>`<li>${s}</li>`).join('')}</ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🕸️ Skill Radar</div>
+        <div class="radar-wrap"><canvas id="radar-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <a href="hr-interview.html"          class="btn-pri">Practice Again</a>
+      <a href="analytics.html"             class="btn-sec">View Analytics</a>
+      <a href="dashboard.html"             class="btn-sec">Dashboard</a>
+    </div>`;
+
+  // Draw radar
+  requestAnimationFrame(() => {
+    const ctx = document.getElementById('radar-chart');
+    if (!ctx) return;
+    if (radarChart) radarChart.destroy();
+    radarChart = new Chart(ctx, {
+      type:'radar',
+      data:{
+        labels:['Communication','Technical','Confidence','Clarity','Problem Solving'],
+        datasets:[{
+          label:'Your Score',
+          data:[fb.communication||score, fb.technicalScore||score, fb.confidence||score, fb.clarity||score, fb.problemSolving||score],
+          backgroundColor:'rgba(139,92,246,.15)', borderColor:'#8B5CF6',
+          borderWidth:2, pointBackgroundColor:'#8B5CF6', pointRadius:4,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        scales:{r:{ticks:{display:false,stepSize:20},grid:{color:'rgba(255,255,255,.08)'},pointLabels:{color:'rgba(255,255,255,.5)',font:{size:11}},min:0,max:100}},
+        plugins:{legend:{display:false}}
+      }
+    });
+  });
+}
+
+async function load() {
+  try {
+    const r = await fetch(`${API}/feedback/history`, { headers:{ Authorization:'Bearer '+token }});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.message);
+    const items = d.data || [];
+
+    if (items.length) {
+      renderFeedback(items[0], items[0].interview);
+      // History grid
+      const icons = { hr:'👥', technical:'💻' };
+      const c     = (s)=>s>=75?'#34d399':s>=55?'#fbbf24':'#f87171';
+      document.getElementById('history-grid').innerHTML = items.map(f=>`
+        <div class="hist-card" onclick="loadOne('${f._id}')">
+          <div class="hc-left">
+            <div class="hc-icon">${icons[(f.interview&&f.interview.type)||'hr']||'📝'}</div>
+            <div>
+              <div class="hc-type">${((f.interview&&f.interview.category)||(f.interview&&f.interview.type)||'Interview').toUpperCase()}</div>
+              <div class="hc-date">${new Date(f.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+            </div>
+          </div>
+          <div class="hc-score" style="color:${c(f.score)}">${f.score}/100</div>
+        </div>`).join('');
+    }
+  } catch(e) {
+    // keep empty state
+  }
+}
+
+async function loadOne(id) {
+  try {
+    const r = await fetch(`${API}/feedback/history`, { headers:{ Authorization:'Bearer '+token }});
+    const d = await r.json();
+    const fb = (d.data||[]).find(f=>f._id===id);
+    if (fb) { window.scrollTo(0,0); renderFeedback(fb, fb.interview); }
+  } catch(e){}
+}
+
+load();
+</script>
+</body></html>
