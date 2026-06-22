@@ -1,10 +1,14 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
+  if (!process.env.MONGO_URI) {
+    console.warn('⚠️  MONGO_URI is not set. API routes that need the database will return 503.');
+    return null;
+  }
+
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      // These options silence deprecation warnings in Mongoose 6+
-      // (Mongoose 7+ ignores them but they don't hurt)
+      serverSelectionTimeoutMS: 5000,
     });
 
     console.log(`✅  MongoDB connected: ${conn.connection.host}`);
@@ -20,8 +24,8 @@ const connectDB = async () => {
 
   } catch (error) {
     console.error(`❌  MongoDB connection error: ${error.message}`);
-    // Exit process so PM2 / nodemon restarts cleanly
-    process.exit(1);
+    console.warn('⚠️  Backend is still running. Fix MongoDB access, then restart the backend.');
+    return null;
   }
 };
 
