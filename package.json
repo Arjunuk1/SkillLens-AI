@@ -1,0 +1,12 @@
+{
+  "name": "skilllens-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SkillLens AI website and backend",
+  "scripts": {
+    "install:backend": "npm install --prefix backend",
+    "dev": "npm run dev --prefix backend",
+    "start": "npm start --prefix backend",
+    "test": "npm test --prefix backend"
+  }
+}
