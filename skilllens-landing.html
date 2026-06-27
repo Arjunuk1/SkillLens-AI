@@ -97,7 +97,7 @@ nav{
 .nav-links a{color:var(--muted);text-decoration:none;transition:color .2s;position:relative}
 .nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1.5px;background:#8B5CF6;transition:width .25s;border-radius:1px}
 .nav-links a:hover{color:#fff}.nav-links a:hover::after{width:100%}
-.nav-btns{display:flex;align-items:center;gap:10px}
+.nav-btns,.nav-auth{display:flex;align-items:center;gap:10px}
 .btn-nav-ghost{
   padding:8px 20px;border-radius:10px;
   border:.5px solid rgba(255,255,255,.18);background:transparent;
@@ -111,6 +111,18 @@ nav{
   font-size:13px;font-family:inherit;font-weight:700;cursor:pointer;transition:all .2s;
 }
 .btn-nav-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(108,92,231,.5)}
+.nav-user{
+  display:none;align-items:center;gap:10px;color:rgba(255,255,255,.82);
+  font-size:13px;font-weight:700;
+}
+.nav-avatar{
+  width:32px;height:32px;border-radius:10px;
+  background:linear-gradient(135deg,#34d399,#3b82f6);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:12px;font-weight:800;text-transform:uppercase;
+}
+body.logged-in .nav-auth{display:none}
+body.logged-in .nav-user{display:flex}
 
 /* ═══════════════════════════════════════════════════
    MODAL SYSTEM — FULLY FIXED
@@ -542,8 +554,16 @@ footer{border-top:.5px solid var(--border);padding:38px 0}
     <a href="#developer">About</a>
   </div>
   <div class="nav-btns">
-    <button class="btn-nav-ghost" id="btn-open-login">Log in</button>
-    <button class="btn-nav-primary" id="btn-open-signup">Sign up free</button>
+    <div class="nav-auth">
+      <button class="btn-nav-ghost" id="btn-open-login">Log in</button>
+      <button class="btn-nav-primary" id="btn-open-signup">Sign up free</button>
+    </div>
+    <div class="nav-user" id="nav-user">
+      <span class="nav-avatar" id="nav-avatar">SL</span>
+      <span id="nav-user-name">Student</span>
+      <button class="btn-nav-primary" id="btn-open-dashboard">Dashboard</button>
+      <button class="btn-nav-ghost" id="btn-logout">Logout</button>
+    </div>
   </div>
 </nav>
 
@@ -926,49 +946,43 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('mouseleave', () => { cursorGlow.style.opacity = '0'; cursorVisible = false; });
 
 /* ═══════════════════════════════════════════════════
-   PARTICLE SYSTEM WITH MOUSE PARALLAX
+   PARTICLE SYSTEM
 ═══════════════════════════════════════════════════ */
 const canvas = document.getElementById('particles');
 const ctx    = canvas.getContext('2d');
-let mouseX = null, mouseY = null;
 
 function resizeCanvas() {
   canvas.width  = window.innerWidth;
   canvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
 }
 window.addEventListener('resize', resizeCanvas);
-document.addEventListener('mousemove', (e) => {
-  mouseX = e.clientX;
-  mouseY = e.clientY + window.scrollY;
-});
 resizeCanvas();
 
-const PARTICLE_COUNT = 95;
+const PARTICLE_COUNT = 135;
 const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
   x:  Math.random() * canvas.width,
   y:  Math.random() * canvas.height,
-  vx: (Math.random() - 0.5) * 0.38,
-  vy: (Math.random() - 0.5) * 0.38,
-  r:  Math.random() * 1.7 + 0.4,
+  vx: (Math.random() - 0.5) * 0.28,
+  vy: (Math.random() - 0.5) * 0.28,
+  drift: Math.random() * Math.PI * 2,
+  r:  Math.random() * 1.45 + 0.45,
 }));
 
 function drawParticles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   particles.forEach(p => {
-    // Gentle mouse attraction
-    if (mouseX !== null) {
-      p.vx += (mouseX - p.x) * 7e-5;
-      p.vy += (mouseY - p.y) * 7e-5;
-    }
-    // Speed cap
+    p.drift += 0.006;
+    p.vx += Math.cos(p.drift) * 0.0025;
+    p.vy += Math.sin(p.drift) * 0.0025;
+
     const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-    if (speed > 0.85) { p.vx *= 0.85 / speed; p.vy *= 0.85 / speed; }
+    if (speed > 0.45) { p.vx *= 0.45 / speed; p.vy *= 0.45 / speed; }
     p.x += p.vx; p.y += p.vy;
     if (p.x < 0 || p.x > canvas.width)  p.vx *= -1;
     if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(167,139,250,0.48)';
+    ctx.fillStyle = 'rgba(255,255,255,0.58)';
     ctx.fill();
   });
   // Constellation lines
@@ -981,7 +995,7 @@ function drawParticles() {
         ctx.beginPath();
         ctx.moveTo(particles[i].x, particles[i].y);
         ctx.lineTo(particles[j].x, particles[j].y);
-        ctx.strokeStyle = `rgba(167,139,250,${0.11 * (1 - d / 128)})`;
+        ctx.strokeStyle = `rgba(255,255,255,${0.075 * (1 - d / 128)})`;
         ctx.lineWidth   = 0.5;
         ctx.stroke();
       }
@@ -1037,6 +1051,51 @@ function showToast(message, type = 'success') {
 }
 
 /* ═══════════════════════════════════════════════════
+   AUTH UI STATE
+═══════════════════════════════════════════════════ */
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem('sl_user') || 'null');
+  } catch (err) {
+    localStorage.removeItem('sl_user');
+    return null;
+  }
+}
+
+function syncAuthUI() {
+  const token = localStorage.getItem('sl_token');
+  const user = getStoredUser();
+  const isLoggedIn = Boolean(token && user);
+  document.body.classList.toggle('logged-in', isLoggedIn);
+
+  if (!isLoggedIn) return;
+
+  const fullName = user.fullName || 'Student';
+  const firstName = fullName.trim().split(/\s+/)[0] || 'Student';
+  const initials = fullName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part.charAt(0))
+    .join('')
+    .toUpperCase() || 'SL';
+
+  document.getElementById('nav-user-name').textContent = firstName;
+  document.getElementById('nav-avatar').textContent = initials;
+}
+
+function goToDashboard() {
+  window.location.href = 'dashboard.html';
+}
+
+function handleLogout() {
+  localStorage.removeItem('sl_token');
+  localStorage.removeItem('sl_user');
+  syncAuthUI();
+  showToast('Logged out successfully.', 'info');
+}
+
+/* ═══════════════════════════════════════════════════
    MODAL ENGINE — COMPLETELY REBUILT & FIXED
 ═══════════════════════════════════════════════════ */
 
@@ -1087,9 +1146,20 @@ document.addEventListener('keydown', (e) => {
 // Wire navbar buttons
 document.getElementById('btn-open-login').addEventListener('click',  () => openModal('modal-login'));
 document.getElementById('btn-open-signup').addEventListener('click', () => openModal('modal-signup'));
-document.getElementById('hero-cta-signup').addEventListener('click', () => openModal('modal-signup'));
-document.getElementById('cta-signup-btn').addEventListener('click',  () => openModal('modal-signup'));
-document.getElementById('cta-login-btn').addEventListener('click',   () => openModal('modal-login'));
+document.getElementById('btn-open-dashboard').addEventListener('click', goToDashboard);
+document.getElementById('btn-logout').addEventListener('click', handleLogout);
+document.getElementById('hero-cta-signup').addEventListener('click', () => {
+  if (localStorage.getItem('sl_token')) return goToDashboard();
+  openModal('modal-signup');
+});
+document.getElementById('cta-signup-btn').addEventListener('click',  () => {
+  if (localStorage.getItem('sl_token')) return goToDashboard();
+  openModal('modal-signup');
+});
+document.getElementById('cta-login-btn').addEventListener('click',   () => {
+  if (localStorage.getItem('sl_token')) return goToDashboard();
+  openModal('modal-login');
+});
 
 // Wire close buttons
 document.getElementById('close-login').addEventListener('click',  () => closeModal('modal-login'));
@@ -1216,11 +1286,12 @@ async function handleLogin() {
       // Store auth data
       localStorage.setItem('sl_token', data.token);
       localStorage.setItem('sl_user',  JSON.stringify(data.user));
+      syncAuthUI();
       showModalAlert('login-alert', 'Login successful! Redirecting to dashboard...', 'success');
       showToast(`Welcome back, ${data.user.fullName}! 👋`, 'success');
       setTimeout(() => {
         closeModal('modal-login');
-        // window.location.href = '/dashboard';  // Uncomment when dashboard is ready
+        goToDashboard();
       }, 1500);
     } else {
       showModalAlert('login-alert', data.message || 'Invalid email or password', 'error');
@@ -1277,11 +1348,12 @@ async function handleSignup() {
     if (response.ok && data.success) {
       localStorage.setItem('sl_token', data.token);
       localStorage.setItem('sl_user',  JSON.stringify(data.user));
+      syncAuthUI();
       showModalAlert('signup-alert', 'Account created successfully! Welcome to SkillLens AI 🎉', 'success');
       showToast(`Welcome, ${data.user.fullName}! Your journey starts now 🚀`, 'success');
       setTimeout(() => {
         closeModal('modal-signup');
-        // window.location.href = '/dashboard';  // Uncomment when dashboard is ready
+        goToDashboard();
       }, 1800);
     } else {
       showModalAlert('signup-alert', data.message || 'Registration failed. Please try again.', 'error');
@@ -1320,6 +1392,8 @@ document.querySelectorAll('.form-field input').forEach(input => {
     if (err) err.classList.remove('visible');
   });
 });
+
+syncAuthUI();
 </script>
 </body>
 </html>
