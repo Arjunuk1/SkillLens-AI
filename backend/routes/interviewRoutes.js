@@ -1,22 +1,11 @@
 const express = require('express');
 const router  = express.Router();
-// const { protect } = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
+const { startInterview, submitInterview, getInterviewHistory, getInterviewById } = require('../controllers/interviewController');
 
-// ── Stubs — implement in Phase 5 (HR) and Phase 6 (Technical) ────────────────
-
-// POST /api/interview/start
-router.post('/start', (req, res) => {
-  res.status(501).json({ success: false, message: 'Interview start — coming in Phase 5' });
-});
-
-// POST /api/interview/submit
-router.post('/submit', (req, res) => {
-  res.status(501).json({ success: false, message: 'Interview submit — coming in Phase 5' });
-});
-
-// GET /api/interview/history
-router.get('/history', (req, res) => {
-  res.status(501).json({ success: false, message: 'Interview history — coming in Phase 5' });
-});
+router.post('/start',    protect, startInterview);
+router.post('/submit',   protect, submitInterview);
+router.get('/history',   protect, getInterviewHistory);
+router.get('/:id',       protect, getInterviewById);
 
 module.exports = router;
