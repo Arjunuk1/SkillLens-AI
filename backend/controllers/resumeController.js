@@ -9,24 +9,32 @@ const uploadResume = async (req, res, next) => {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded. Please upload a PDF.' });
 
     const filePath = req.file.path;
-    let extractedText = '';
 
     // Extract text from PDF
+    let extractedText = '';
     try {
       const pdfParse = require('pdf-parse');
       const buffer   = fs.readFileSync(filePath);
       const data     = await pdfParse(buffer);
       extractedText  = data.text;
     } catch (e) {
-      extractedText = 'Could not extract text from PDF.';
+      console.error('PDF extraction failed:', e.message);
+      return res.status(400).json({ success: false, message: 'Could not read this PDF. Please make sure it is a valid, non-corrupted, text-based PDF and try again.' });
+    }
+    if (!extractedText || extractedText.trim().length < 50) {
+      return res.status(400).json({ success: false, message: 'This PDF appears to have little or no extractable text (it may be a scanned image). Please upload a text-based resume PDF.' });
     }
 
     // Send to Gemini for analysis
-    let analysis = { atsScore: 60, strengths: [], weakAreas: [], missingSkills: [], suggestions: [] };
+    let analysis;
     try {
       analysis = await analyzeResumeWithGemini(extractedText);
     } catch (e) {
       console.error('Gemini analysis failed:', e.message);
+      return res.status(502).json({
+        success: false,
+        message: `Resume analysis failed: ${e.message}. Please try again in a moment.`,
+      });
     }
 
     const resume = await Resume.create({
@@ -35,10 +43,13 @@ const uploadResume = async (req, res, next) => {
       fileUrl:       `/uploads/${req.file.filename}`,
       extractedText,
       atsScore:      analysis.atsScore,
+      skillsFound:   analysis.skillsFound,
       strengths:     analysis.strengths,
       weakAreas:     analysis.weakAreas,
       missingSkills: analysis.missingSkills,
       suggestions:   analysis.suggestions,
+      projectsAnalysis:    analysis.projectsAnalysis,
+      recruiterImpression: analysis.recruiterImpression,
     });
 
     res.status(201).json({ success: true, message: 'Resume analyzed successfully', data: resume });

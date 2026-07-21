@@ -21,9 +21,19 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type:      String,
-      required:  [true, 'Password is required'],
+      required:  [function () { return this.authProvider === 'local'; }, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
       select:    false, // never returned in queries by default
+    },
+    authProvider: {
+      type:    String,
+      enum:    ['local', 'google'],
+      default: 'local',
+    },
+    googleId: {
+      type:   String,
+      unique: true,
+      sparse: true, // allows many docs with no googleId (local accounts) while still enforcing uniqueness when present
     },
 
     // ── Academic profile ─────────────────────────────────────────────────────
@@ -67,8 +77,9 @@ const userSchema = new mongoose.Schema(
 
 // ── Hash password before saving ──────────────────────────────────────────────
 userSchema.pre('save', async function (next) {
-  // Only re-hash when password field was actually modified
-  if (!this.isModified('password')) return next();
+  // Only re-hash when password field was actually modified, and only if one was actually set
+  // (Google-authenticated accounts have no password at all)
+  if (!this.isModified('password') || !this.password) return next();
   const salt   = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
   next();
@@ -90,6 +101,7 @@ userSchema.methods.toPublicJSON = function () {
     year:         this.year,
     profilePhoto: this.profilePhoto,
     role:         this.role,
+    authProvider: this.authProvider,
     createdAt:    this.createdAt,
   };
 };

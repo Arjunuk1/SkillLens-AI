@@ -5,9 +5,13 @@ const router   = express.Router();
 const { protect } = require('../middleware/auth');
 const { uploadResume, getResumeHistory, getResumeById } = require('../controllers/resumeController');
 
+const crypto = require('crypto');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../uploads')),
-  filename:    (req, file, cb) => cb(null, `resume_${req.user._id}_${Date.now()}${path.extname(file.originalname)}`),
+  // Random, unguessable filename — the old pattern (resume_<userId>_<timestamp>.pdf) was
+  // predictable and these files are served without auth, so a guessable name meant anyone
+  // could potentially enumerate other users' resumes (which contain real PII).
+  filename:    (req, file, cb) => cb(null, `resume_${crypto.randomBytes(24).toString('hex')}${path.extname(file.originalname)}`),
 });
 const upload = multer({
   storage,

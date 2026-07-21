@@ -52,7 +52,32 @@
 .b2{width:400px;height:400px;background:#00b4d8;bottom:0;right:-100px}
 .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;background:rgba(52,211,153,.15);border:.5px solid rgba(52,211,153,.4);color:#34d399;backdrop-filter:blur(12px);transform:translateY(20px);opacity:0;transition:all .3s;z-index:200}
 .toast.show{opacity:1;transform:translateY(0)}
-@media(max-width:600px){.stats-row,.grid-2,.ach-grid,.info-grid{grid-template-columns:1fr 1fr}.profile-banner{flex-wrap:wrap}.edit-btn{margin-left:0}}
+/* GAMIFICATION */
+.game-row{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:22px}
+.level-card{display:flex;align-items:center;gap:18px}
+.level-badge{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#6c5ce7,#00b4d8);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 8px 24px rgba(108,92,231,.35)}
+.level-badge .lv-num{font-size:20px;font-weight:800;line-height:1}
+.level-badge .lv-lbl{font-size:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.level-info{flex:1}
+.level-title{font-size:16px;font-weight:800;margin-bottom:6px}
+.xp-track{height:9px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;margin-bottom:6px}
+.xp-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#8B5CF6,#22d3ee);transition:width .6s ease}
+.xp-text{font-size:11.5px;color:var(--muted)}
+.coins-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.coins-icon{font-size:32px;margin-bottom:6px}
+.coins-val{font-size:26px;font-weight:800;color:#fbbf24}
+.coins-lbl{font-size:11.5px;color:var(--muted);margin-top:2px}
+.badge-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.badge-item{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.03);border:.5px solid var(--border);border-radius:12px}
+.badge-item.locked{opacity:.38}
+.badge-icon{font-size:22px;flex-shrink:0}
+.badge-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.badge-desc{font-size:11px;color:var(--muted)}
+.bookmark-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto}
+.bookmark-item{padding:11px 14px;background:rgba(255,255,255,.03);border:.5px solid var(--border);border-radius:10px}
+.bookmark-q{font-size:12.5px;color:rgba(255,255,255,.8);margin-bottom:4px;line-height:1.4}
+.bookmark-meta{font-size:10.5px;color:var(--muted);display:flex;gap:8px}
+@media(max-width:600px){.stats-row,.grid-2,.ach-grid,.info-grid,.game-row,.badge-grid{grid-template-columns:1fr 1fr}.profile-banner{flex-wrap:wrap}.edit-btn{margin-left:0}}
 </style>
 </head>
 <body>
@@ -83,6 +108,33 @@
     <div class="stat"><div class="stat-val c-p" id="s-avg">-</div><div class="stat-lbl">Avg Score</div></div>
     <div class="stat"><div class="stat-val c-a" id="s-streak">-</div><div class="stat-lbl">Day Streak 🔥</div></div>
     <div class="stat"><div class="stat-val c-g" id="s-resume">-</div><div class="stat-lbl">Resume Score</div></div>
+  </div>
+
+  <div class="game-row">
+    <div class="card level-card">
+      <div class="level-badge"><span class="lv-num" id="lv-num">1</span><span class="lv-lbl">Level</span></div>
+      <div class="level-info">
+        <div class="level-title" id="level-title">Beginner</div>
+        <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+        <div class="xp-text" id="xp-text">0 / 150 XP</div>
+      </div>
+    </div>
+    <div class="card coins-card">
+      <div class="coins-icon">🪙</div>
+      <div class="coins-val" id="coins-val">0</div>
+      <div class="coins-lbl">Coins Earned</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">🎖️ Badges</div>
+      <div class="badge-grid" id="badge-grid"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">🔖 Bookmarked Questions</div>
+      <div class="bookmark-list" id="bookmark-list"><div style="color:var(--muted);font-size:12.5px;text-align:center;padding:16px 0">No bookmarks yet — save questions during a technical interview to review them here.</div></div>
+    </div>
   </div>
 
   <div class="grid-2">
@@ -201,12 +253,31 @@ async function load() {
       { id:'fifty',           icon:'🏆', title:'Elite',            desc:'50 interviews done' },
       { id:'resume_uploaded', icon:'📄', title:'Resume Ready',     desc:'Upload resume' },
       { id:'ats_80',          icon:'🎖️', title:'ATS Champion',    desc:'Resume score > 80' },
+      { id:'streak_10',       icon:'🔥', title:'10 Day Streak',   desc:'10 consecutive days of practice' },
+      { id:'perfect_score',   icon:'💯', title:'First Perfect Score', desc:'Score 100/100 on an interview' },
     ];
     const earned = new Set((p.achievements||[]).map(a=>a.id));
     achGrid.innerHTML = allAch.map(a => `
       <div class="ach ${earned.has(a.id)?'':'locked'}">
         <div class="ach-icon">${a.icon}</div>
         <div><div class="ach-title">${a.title}</div><div class="ach-desc">${a.desc}</div></div>
+      </div>`).join('');
+
+    // Gamification
+    const g = p.gamification || {};
+    document.getElementById('lv-num').textContent = g.level || 1;
+    document.getElementById('level-title').textContent = `Level ${g.level || 1} — ${g.levelTitle || 'Beginner'}`;
+    const xpPct = g.xpForNextLevel ? Math.min(100, Math.round((g.xpIntoLevel / g.xpForNextLevel) * 100)) : 0;
+    document.getElementById('xp-fill').style.width = xpPct + '%';
+    document.getElementById('xp-text').textContent = `${g.xpIntoLevel || 0} / ${g.xpForNextLevel || 150} XP to next level`;
+    document.getElementById('coins-val').textContent = g.coins || 0;
+
+    // Badges
+    const badges = p.badges || [];
+    document.getElementById('badge-grid').innerHTML = badges.map(b => `
+      <div class="badge-item ${b.earned?'':'locked'}">
+        <div class="badge-icon">${b.icon}</div>
+        <div><div class="badge-title">${b.title}</div><div class="badge-desc">${b.desc}</div></div>
       </div>`).join('');
 
     // Recommendations
@@ -232,6 +303,23 @@ async function load() {
       document.getElementById('inp-email').value = user.email;
     }
   }
+  loadBookmarks();
+}
+
+async function loadBookmarks() {
+  try {
+    const [techRes, hrRes] = await Promise.all([
+      fetch(`${API}/technical/bookmarks`, { headers:{ Authorization:'Bearer '+token }}).then(r=>r.json()).catch(()=>({data:[]})),
+      fetch(`${API}/interview/bookmarks`,  { headers:{ Authorization:'Bearer '+token }}).then(r=>r.json()).catch(()=>({data:[]})),
+    ]);
+    const bms = [...(techRes.data||[]), ...(hrRes.data||[])].sort((a,b) => new Date(b.savedAt) - new Date(a.savedAt));
+    if (!bms.length) return; // keep the default empty-state message
+    document.getElementById('bookmark-list').innerHTML = bms.slice(0,10).map(b => `
+      <div class="bookmark-item">
+        <div class="bookmark-q">${b.text}</div>
+        <div class="bookmark-meta"><span>${b.category}</span><span>·</span><span>${(b.qType||'short').toUpperCase()}</span><span>·</span><span>${b.difficulty||'medium'}</span></div>
+      </div>`).join('');
+  } catch(e) { /* leave default empty-state, non-critical */ }
 }
 load();
 </script>

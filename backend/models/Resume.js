@@ -16,10 +16,13 @@ const resumeSchema = new mongoose.Schema(
     fileUrl:       { type: String, default: '' }, // cloud storage URL
     extractedText: { type: String, default: '' },
     atsScore:      { type: Number, min: 0, max: 100, default: 0 },
+    skillsFound:   [{ type: String }],
     missingSkills: [{ type: String }],
     strengths:     [{ type: String }],
     weakAreas:     [{ type: String }],
     suggestions:   [{ type: String }],
+    projectsAnalysis: { type: String, default: '' },
+    recruiterImpression: { type: Number, min: 0, max: 10, default: null },
   },
   { timestamps: true }
 );
