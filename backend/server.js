@@ -15,8 +15,8 @@ const app = express();
 // Security
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' })); // raised for base64 voice-answer audio in HR interview submissions
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
 
 // Serve uploaded files

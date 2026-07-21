@@ -65,6 +65,31 @@ const getAnalytics = async (req, res, next) => {
       improvement  = Math.round(((second - first) / (first || 1)) * 100);
     }
 
+    // Question type breakdown (mcq / short / scenario) across all technical sessions
+    const typeCounts = { mcq: 0, short: 0, scenario: 0 };
+    interviews.filter(iv => iv.type === 'technical').forEach(iv => {
+      (iv.questions || []).forEach(q => {
+        const t = q.qType || 'short';
+        if (typeCounts[t] !== undefined) typeCounts[t] += 1;
+      });
+    });
+
+    // Practice frequency heatmap — last 70 days, one count per day
+    const HEATMAP_DAYS = 70;
+    const dayKey = (d) => new Date(d).toISOString().slice(0, 10);
+    const freqMap = {};
+    interviews.forEach(iv => {
+      const k = dayKey(iv.createdAt);
+      freqMap[k] = (freqMap[k] || 0) + 1;
+    });
+    const practiceFrequency = [];
+    const today = new Date(); today.setHours(0,0,0,0);
+    for (let i = HEATMAP_DAYS - 1; i >= 0; i--) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      const k = dayKey(d);
+      practiceFrequency.push({ date: k, count: freqMap[k] || 0 });
+    }
+
     res.json({
       success: true,
       data: {
@@ -79,6 +104,8 @@ const getAnalytics = async (req, res, next) => {
         scoreTrend,
         categoryScores,
         radar,
+        questionTypeBreakdown: typeCounts,
+        practiceFrequency,
         recentActivity: interviews.slice(-5).reverse().map(iv => ({
           id:       iv._id,
           type:     iv.type,

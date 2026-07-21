@@ -65,11 +65,12 @@ Your `.env` should look like:
 ```
 PORT=5000
 NODE_ENV=development
-MONGO_URI=mongodb+srv://skilllensadmin:SkillLens%402026@skilllens.0vjdlio.mongodb.net/?appName=SkillLens
-JWT_SECRET=skilllens_super_secret_key
+MONGO_URI=mongodb+srv://<your-db-username>:<your-db-password>@<your-cluster>.mongodb.net/?appName=SkillLens
+JWT_SECRET=<a long random string - generate your own, never share this>
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:3000
 ```
+**Never commit your real `.env` file or paste real credentials into documentation.** `.env` is already in `.gitignore` — keep it that way.
 
 ### 3. Start development server
 ```bash
