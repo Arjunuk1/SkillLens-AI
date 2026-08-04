@@ -1,20 +1,11 @@
+const mongoose  = require('mongoose');
 const Interview = require('../models/Interview');
-const Question  = require('../models/Question');
 const Result    = require('../models/Result');
-const { evaluateAnswerWithGemini, generateFeedbackReport, generateHint } = require('../config/gemini');
+const { generateGroqQuestionSet, evaluateAnswerWithGemini, generateFeedbackReport, generateHint } = require('../config/gemini');
 
 const VALID_CATS  = ['DSA','OOP','DBMS','OS','CN','Web Development'];
 const VALID_DIFFS = ['easy','medium','hard','mixed'];
-const VALID_DURATIONS = [15, 25, 45]; // minutes
-
-const shuffle = (arr) => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
+const VALID_DURATIONS = [15, 25]; // minutes
 
 // Strips fields the client must not see before submitting (correct MCQ answer)
 const toClientQuestion = (q) => ({
@@ -34,55 +25,37 @@ const startTechnical = async (req, res, next) => {
     if (!VALID_DIFFS.includes(difficulty)) return res.status(400).json({ success: false, message: `Difficulty must be one of: ${VALID_DIFFS.join(', ')}` });
 
     const total = Math.min(30, Math.max(1, parseInt(count) || 10));
-    const durationMin = VALID_DURATIONS.includes(parseInt(duration)) ? parseInt(duration) : (total <= 5 ? 15 : total <= 10 ? 25 : 45);
+    const requestedDuration = parseInt(duration, 10) || 25;
+    if (!VALID_DURATIONS.includes(requestedDuration)) return res.status(400).json({ success: false, message: 'Duration must be 15 or 25 minutes' });
+    const durationSeconds = requestedDuration * 60;
 
-    const baseMatch = { type: 'technical', category, isActive: true };
-    if (difficulty !== 'mixed') baseMatch.difficulty = difficulty;
+    const generated = await generateGroqQuestionSet({
+      mode: 'technical',
+      category,
+      difficulty,
+      count: total,
+    });
 
-    // Mixed question-type interview: MCQ (fast, objective) + short theory + scenario
-    const mcqCount      = Math.max(1, Math.round(total * 0.4));
-    const scenarioCount = Math.max(0, Math.round(total * 0.2));
-    const shortCount    = Math.max(0, total - mcqCount - scenarioCount);
-
-    const sampleByType = async (qType, n) => {
-      if (n <= 0) return [];
-      return Question.aggregate([
-        { $match: { ...baseMatch, qType } },
-        { $sample: { size: n } },
-      ]);
-    };
-
-    let [mcqQs, scenarioQs, shortQs] = await Promise.all([
-      sampleByType('mcq', mcqCount),
-      sampleByType('scenario', scenarioCount),
-      sampleByType('short', shortCount),
-    ]);
-
-    let combined = [...mcqQs, ...scenarioQs, ...shortQs];
-
-    // Backfill from 'short' if the category doesn't have enough of a given type yet
-    if (combined.length < total) {
-      const have = new Set(combined.map(q => q._id.toString()));
-      const backfill = await Question.aggregate([
-        { $match: { ...baseMatch, _id: { $nin: [...have].map(id => new (require('mongoose').Types.ObjectId)(id)) } } },
-        { $sample: { size: total - combined.length } },
-      ]);
-      combined = [...combined, ...backfill];
+    if (!generated.length) {
+      return res.status(502).json({ success: false, message: 'Could not generate technical questions right now. Please try again.' });
     }
 
-    if (!combined.length) return res.status(404).json({ success: false, message: `No questions found for ${category}${difficulty !== 'mixed' ? ' at ' + difficulty + ' difficulty' : ''}. Please seed the database.` });
-
-    combined = shuffle(combined).slice(0, total);
+    const savedQuestions = generated.map((q) => ({
+      questionId: new mongoose.Types.ObjectId(),
+      text: q.text,
+      qType: q.qType,
+      options: q.qType === 'mcq' ? q.options : [],
+      correctIndex: q.qType === 'mcq' ? q.correctIndex : null,
+      tags: q.tags || [q.category, q.qType],
+      difficulty: q.difficulty || difficulty,
+      answer: '',
+    }));
 
     const session = await Interview.create({
       user: req.user._id, type: 'technical', category, difficulty,
-      durationSeconds: durationMin * 60,
+      durationSeconds,
       startedAt: new Date(),
-      questions: combined.map(q => ({
-        questionId: q._id, text: q.text, qType: q.qType || 'short',
-        options: q.options || [], correctIndex: q.correctIndex ?? null,
-        tags: q.tags || [], difficulty: q.difficulty || 'medium', answer: '',
-      })),
+      questions: savedQuestions,
       status: 'in-progress',
     });
 
@@ -90,8 +63,33 @@ const startTechnical = async (req, res, next) => {
       sessionId: session._id, category, difficulty,
       durationSeconds: session.durationSeconds,
       totalQuestions: session.questions.length,
-      questions: session.questions.map(toClientQuestion),
+      questions: generated.map((q, index) => ({
+        ...toClientQuestion(session.questions[index]),
+        text: q.text,
+        qType: q.qType,
+        difficulty: q.difficulty,
+        tags: q.tags,
+        options: q.qType === 'mcq' ? q.options : undefined,
+      })),
     }});
+  } catch (err) { next(err); }
+};
+
+// POST /api/technical/quit
+const quitTechnical = async (req, res, next) => {
+  try {
+    const { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ success: false, message: 'sessionId is required' });
+
+    const session = await Interview.findOne({ _id: sessionId, user: req.user._id, type: 'technical' });
+    if (!session) return res.status(404).json({ success: false, message: 'Technical session not found' });
+    if (session.status === 'completed') return res.status(400).json({ success: false, message: 'Session already completed' });
+
+    session.status = 'abandoned';
+    session.completedAt = new Date();
+    await session.save();
+
+    res.json({ success: true, message: 'Technical session ended' });
   } catch (err) { next(err); }
 };
 
@@ -103,7 +101,7 @@ const submitTechnical = async (req, res, next) => {
 
     const session = await Interview.findOne({ _id: sessionId, user: req.user._id, type: 'technical' });
     if (!session) return res.status(404).json({ success: false, message: 'Technical session not found' });
-    if (session.status === 'completed') return res.status(400).json({ success: false, message: 'Already submitted' });
+    if (session.status !== 'in-progress') return res.status(400).json({ success: false, message: 'Session is no longer active' });
 
     let totalScore = 0, scoredCount = 0;
     let mcqCorrect = 0, mcqTotal = 0;
@@ -119,9 +117,8 @@ const submitTechnical = async (req, res, next) => {
       });
     };
 
-    for (const ans of answers) {
-      const q = session.questions.find(q => q.questionId?.toString() === ans.questionId);
-      if (!q) continue;
+    for (const q of session.questions) {
+      const ans = answers.find(answer => q.questionId?.toString() === answer.questionId) || { answer: '' };
       q.answer = ans.answer;
 
       if (q.qType === 'mcq') {
@@ -137,6 +134,15 @@ const submitTechnical = async (req, res, next) => {
           question: q.text, qType: 'mcq', answer: ans.answer, correct,
           correctIndex: q.correctIndex, options: q.options, score,
         });
+        continue;
+      }
+
+      if (!String(ans.answer || '').trim()) {
+        const score = 0;
+        totalScore += score; scoredCount += 1;
+        addTopicScore(q.tags, score);
+        q.score = score;
+        evaluations.push({ question: q.text, qType: q.qType, answer: '', score, strengths: [], weaknesses: ['No answer provided'], suggestions: ['Answer this question before submitting.'], idealAnswer: '' });
         continue;
       }
 
@@ -164,10 +170,15 @@ const submitTechnical = async (req, res, next) => {
     const accuracy = mcqTotal > 0 ? Math.round((mcqCorrect / mcqTotal) * 100) : null;
 
     let feedback;
-    try { feedback = await generateFeedbackReport({ type: 'technical', category: session.category, evaluations, avgScore, accuracy }); }
-    catch (e) {
-      console.error('Feedback error:', e.message);
-      feedback = { overallScore: avgScore, strengths: [], weaknesses: [], suggestions: [], summary: `AI summary unavailable (${e.message}). Score is based on ${scoredCount}/${answers.length} evaluated answers.` };
+    const answeredCount = evaluations.filter(e => String(e.answer || '').trim()).length;
+    if (answeredCount === 0) {
+      feedback = { overallScore: 0, communication: 0, technicalAccuracy: 0, confidence: 0, clarity: 0, problemSolving: 0, strengths: [], weaknesses: ['No answers were submitted.'], suggestions: ['Attempt each question before submitting your next test.'], summary: 'No answers were submitted, so this interview received a score of 0/100.' };
+    } else {
+      try { feedback = await generateFeedbackReport({ type: 'technical', category: session.category, evaluations, avgScore, accuracy }); }
+      catch (e) {
+        console.error('Feedback error:', e.message);
+        feedback = { overallScore: avgScore, strengths: [], weaknesses: [], suggestions: [], summary: `AI summary unavailable (${e.message}). Score is based on ${scoredCount}/${session.questions.length} evaluated answers.` };
+      }
     }
 
     // Strong / weak topics from per-tag average scores
@@ -182,12 +193,12 @@ const submitTechnical = async (req, res, next) => {
 
     const result = await Result.create({
       user: req.user._id, interview: session._id,
-      score: feedback.overallScore || avgScore,
-      communication: feedback.communication || avgScore,
-      technicalScore: feedback.technicalAccuracy || avgScore,
-      confidence: feedback.confidence || avgScore,
-      clarity: feedback.clarity || avgScore,
-      problemSolving: feedback.problemSolving || avgScore,
+      score: avgScore,
+      communication: feedback.communication ?? avgScore,
+      technicalScore: feedback.technicalAccuracy ?? avgScore,
+      confidence: feedback.confidence ?? avgScore,
+      clarity: feedback.clarity ?? avgScore,
+      problemSolving: feedback.problemSolving ?? avgScore,
       strengths: feedback.strengths || [],
       weaknesses: feedback.weaknesses || [],
       suggestions: feedback.suggestions || [],
@@ -197,7 +208,7 @@ const submitTechnical = async (req, res, next) => {
       strongTopics, weakTopics, recommendedPractice,
     });
 
-    session.score = feedback.overallScore || avgScore;
+    session.score = avgScore;
     session.status = 'completed';
     session.completedAt = new Date();
     await session.save();
@@ -282,4 +293,4 @@ const getTechnicalHistory = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { startTechnical, submitTechnical, getHint, toggleBookmark, getBookmarks, getTechnicalHistory };
+module.exports = { startTechnical, submitTechnical, quitTechnical, getHint, toggleBookmark, getBookmarks, getTechnicalHistory };

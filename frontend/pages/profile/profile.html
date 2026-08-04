@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Profile — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="topbar">
+  <a href="/pages/dashboard/dashboard.html" class="logo"><div class="logo-sq">SL</div>SkillLens AI</a>
+  <a href="/pages/dashboard/dashboard.html" style="font-size:13px;color:var(--muted);text-decoration:none">← Dashboard</a>
+</div>
+<div id="toast" class="toast"></div>
+
+<div class="page">
+  <div class="profile-banner">
+    <div class="avatar" id="avatar-initials">AK</div>
+    <div class="profile-info">
+      <h2 id="prof-name">Loading...</h2>
+      <p id="prof-sub">--</p>
+      <div class="prof-tags">
+        <span class="ptag" id="prof-branch">CSE</span>
+        <span class="ptag" id="prof-year">3rd Year</span>
+        <span class="ptag" id="prof-college">IIT Delhi</span>
+      </div>
+    </div>
+    <button class="edit-btn" onclick="toggleEdit()">✏️ Edit Profile</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val c-b" id="s-interviews">-</div><div class="stat-lbl">Interviews</div></div>
+    <div class="stat"><div class="stat-val c-p" id="s-avg">-</div><div class="stat-lbl">Avg Score</div></div>
+    <div class="stat"><div class="stat-val c-a" id="s-streak">-</div><div class="stat-lbl">Day Streak 🔥</div></div>
+    <div class="stat"><div class="stat-val c-g" id="s-resume">-</div><div class="stat-lbl">Resume Score</div></div>
+  </div>
+
+  <div class="game-row">
+    <div class="card level-card">
+      <div class="level-badge"><span class="lv-num" id="lv-num">1</span><span class="lv-lbl">Level</span></div>
+      <div class="level-info">
+        <div class="level-title" id="level-title">Beginner</div>
+        <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+        <div class="xp-text" id="xp-text">0 / 150 XP</div>
+      </div>
+    </div>
+    <div class="card coins-card">
+      <div class="coins-icon">🪙</div>
+      <div class="coins-val" id="coins-val">0</div>
+      <div class="coins-lbl">Coins Earned</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">🎖️ Badges</div>
+      <div class="badge-grid" id="badge-grid"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">🔖 Bookmarked Questions</div>
+      <div class="bookmark-list" id="bookmark-list"><div style="color:var(--muted);font-size:12.5px;text-align:center;padding:16px 0">No bookmarks yet — save questions during a technical interview to review them here.</div></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">🏅 Achievements</div>
+      <div class="ach-grid" id="ach-grid">
+        <div class="ach locked"><div class="ach-icon">🎯</div><div><div class="ach-title">First Step</div><div class="ach-desc">Complete first interview</div></div></div>
+        <div class="ach locked"><div class="ach-icon">🔥</div><div><div class="ach-title">Consistent</div><div class="ach-desc">10 interviews done</div></div></div>
+        <div class="ach locked"><div class="ach-icon">⭐</div><div><div class="ach-title">Interview Pro</div><div class="ach-desc">25 interviews done</div></div></div>
+        <div class="ach locked"><div class="ach-icon">🏆</div><div><div class="ach-title">Elite</div><div class="ach-desc">50 interviews done</div></div></div>
+        <div class="ach locked"><div class="ach-icon">📄</div><div><div class="ach-title">Resume Ready</div><div class="ach-desc">Upload resume</div></div></div>
+        <div class="ach locked"><div class="ach-icon">🎖️</div><div><div class="ach-title">ATS Champion</div><div class="ach-desc">Resume score &gt; 80</div></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">💡 Personalized Recommendations</div>
+      <div class="rec-list" id="rec-list">
+        <div class="rec"><div class="rec-icon" style="background:rgba(217,122,104,.12);color:#d97a68">📄</div><div><div class="rec-text">Upload your resume to get started</div><div class="rec-pri high">High priority</div></div></div>
+        <div class="rec"><div class="rec-icon" style="background:rgba(111,151,236,.12);color:#6f97ec">🎙️</div><div><div class="rec-text">Practice HR questions to build confidence</div><div class="rec-pri medium">Medium priority</div></div></div>
+        <div class="rec"><div class="rec-icon" style="background:rgba(227,163,68,.12);color:#e3a344">💻</div><div><div class="rec-text">Try DSA questions to sharpen your skills</div><div class="rec-pri medium">Medium priority</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">👤 Edit Profile</div>
+    <div class="info-grid">
+      <div class="info-item"><label>Full name</label><input id="inp-name" disabled></div>
+      <div class="info-item"><label>Email</label><input id="inp-email" disabled></div>
+      <div class="info-item"><label>College</label><input id="inp-college" disabled placeholder="Your college"></div>
+      <div class="info-item"><label>Branch</label><input id="inp-branch" disabled placeholder="Your branch"></div>
+      <div class="info-item"><label>Year</label><input id="inp-year" type="number" min="1" max="5" disabled placeholder="1-5"></div>
+    </div>
+    <button class="save-btn" id="save-btn" onclick="saveProfile()">Save Changes</button>
+  </div>
+</div>
+
+<script src="/assets/js/auth-guard.js"></script>
+<script src="profile.js"></script>
+</body></html>

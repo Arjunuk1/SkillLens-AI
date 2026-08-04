@@ -1,5 +1,3 @@
-const path   = require('path');
-const fs     = require('fs');
 const Resume = require('../models/Resume');
 const { analyzeResumeWithGemini } = require('../config/gemini');
 
@@ -8,13 +6,13 @@ const uploadResume = async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded. Please upload a PDF.' });
 
-    const filePath = req.file.path;
+    // File lives only in req.file.buffer (in-memory storage) — never written to disk.
+    const buffer = req.file.buffer;
 
     // Extract text from PDF
     let extractedText = '';
     try {
       const pdfParse = require('pdf-parse');
-      const buffer   = fs.readFileSync(filePath);
       const data     = await pdfParse(buffer);
       extractedText  = data.text;
     } catch (e) {
@@ -40,7 +38,7 @@ const uploadResume = async (req, res, next) => {
     const resume = await Resume.create({
       user:          req.user._id,
       fileName:      req.file.originalname,
-      fileUrl:       `/uploads/${req.file.filename}`,
+      fileUrl:       '', // no longer persisted anywhere — see routes/resumeRoutes.js for why
       extractedText,
       atsScore:      analysis.atsScore,
       skillsFound:   analysis.skillsFound,

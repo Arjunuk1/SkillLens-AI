@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Analytics — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="analytics.css">
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="topbar">
+  <a href="/pages/dashboard/dashboard.html" class="logo"><div class="logo-sq">SL</div>SkillLens AI</a>
+  <a href="/pages/dashboard/dashboard.html" style="font-size:13px;color:var(--muted);text-decoration:none">← Dashboard</a>
+</div>
+<div class="page">
+  <div class="page-title">Performance Analytics</div>
+  <div class="page-sub">Track your progress, identify weak areas, and celebrate your growth</div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-icon">🎙️</div><div class="stat-val c-b" id="st-total">-</div><div class="stat-lbl">Interviews taken</div></div>
+    <div class="stat"><div class="stat-icon">⭐</div><div class="stat-val c-p" id="st-avg">-</div><div class="stat-lbl">Average score</div></div>
+    <div class="stat"><div class="stat-icon">📈</div><div class="stat-val c-g" id="st-impr">-</div><div class="stat-lbl">Improvement</div></div>
+    <div class="stat"><div class="stat-icon">📄</div><div class="stat-val c-a" id="st-resume">-</div><div class="stat-lbl">Resume score</div></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">📊 Score Trend</div>
+      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🥧 Category Breakdown</div>
+      <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="area-row">
+    <div class="chart-card">
+      <div class="chart-title">🕸️ Skill Radar</div>
+      <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📋 Category Performance</div>
+      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🥧 Question Types</div>
+      <div class="chart-wrap"><canvas id="typeChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="activity-card" style="margin-bottom:20px">
+    <div class="activity-title">🔥 Practice Frequency <span style="font-weight:400;color:var(--muted);font-size:12px">(last 10 weeks)</span></div>
+    <div class="heatmap-grid" id="freq-heatmap"></div>
+    <div class="heatmap-legend">Less <div class="heatmap-cell"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l4"></div> More</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">
+    <div class="activity-card">
+      <div class="activity-title">🕐 Recent Activity</div>
+      <div id="activity-list"><div class="empty">No interviews yet. Start practicing!</div></div>
+    </div>
+    <div class="activity-card">
+      <div class="activity-title">🏆 Highlights</div>
+      <div class="highlights">
+        <div class="hl"><h4>Strongest Area</h4><div class="hl-val c-g" id="hl-strong">-</div></div>
+        <div class="hl"><h4>Weakest Area</h4><div class="hl-val c-r" id="hl-weak">-</div></div>
+        <div class="hl"><h4>Best Score</h4><div class="hl-val c-a" id="hl-best">-</div></div>
+        <div class="hl"><h4>Sessions This Week</h4><div class="hl-val c-b" id="hl-week">-</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/auth-guard.js"></script>
+<script src="analytics.js"></script>
+</body></html>

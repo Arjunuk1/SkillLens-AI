@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HR Interview — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="hr-interview.css">
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="topbar">
+  <a href="/pages/dashboard/dashboard.html" class="logo" onclick="return confirmQuitAndGoDashboard(event)"><div class="logo-sq">SL</div>SkillLens AI</a>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span class="session-timer" id="session-timer">⏱ <span id="session-timer-text">00:00</span></span>
+    <a href="/pages/dashboard/dashboard.html" style="font-size:13px;color:var(--muted);text-decoration:none" onclick="return confirmQuitAndGoDashboard(event)">← Dashboard</a>
+  </div>
+</div>
+<div class="progress-wrap"><div class="progress-fill" id="progress-bar"></div></div>
+
+<div class="page">
+
+  <!-- STEP 1: ROUND TYPE -->
+  <div class="screen active" id="screen-cat">
+    <p class="step-eyebrow">Step 1 of 4</p>
+    <h1 class="step-h1">Choose a round type</h1>
+    <p class="step-sub">Select what kind of HR round you want to practice</p>
+    <div class="cat-grid">
+      <div class="cat-card" data-cat="mixed" onclick="selectCat('mixed',this)"><div class="cat-icon">🎯</div><div class="cat-name">Mixed</div><div class="cat-count">A blend of all round types</div></div>
+      <div class="cat-card" data-cat="HR" onclick="selectCat('HR',this)"><div class="cat-icon">🎙️</div><div class="cat-name">General HR</div><div class="cat-count">Background, goals, fit</div></div>
+      <div class="cat-card" data-cat="Behavioral" onclick="selectCat('Behavioral',this)"><div class="cat-icon">🧭</div><div class="cat-name">Behavioral</div><div class="cat-count">Past experiences (STAR)</div></div>
+      <div class="cat-card" data-cat="Situational" onclick="selectCat('Situational',this)"><div class="cat-icon">🧩</div><div class="cat-name">Situational</div><div class="cat-count">Hypothetical scenarios</div></div>
+    </div>
+    <button class="btn-continue" id="btn-cat-continue" onclick="goToStep('screen-diff')">Continue →</button>
+  </div>
+
+  <!-- STEP 2: DIFFICULTY + COUNT + DURATION + ROLE -->
+  <div class="screen" id="screen-diff">
+    <p class="step-eyebrow">Step 2 of 4</p>
+    <h1 class="step-h1">Choose difficulty & length</h1>
+    <p class="step-sub">Tailor the session to how much time you have</p>
+
+    <div class="pick-group">
+      <div class="pick-label">Difficulty</div>
+      <div class="pick-row" id="diff-row">
+        <div class="pick-chip diff-easy" data-diff="easy" onclick="selectDiff('easy',this)"><span class="dot"></span>Easy</div>
+        <div class="pick-chip diff-medium" data-diff="medium" onclick="selectDiff('medium',this)"><span class="dot"></span>Medium</div>
+        <div class="pick-chip diff-hard" data-diff="hard" onclick="selectDiff('hard',this)"><span class="dot"></span>Hard</div>
+        <div class="pick-chip diff-mixed selected" data-diff="mixed" onclick="selectDiff('mixed',this)"><span class="dot"></span>Mixed</div>
+      </div>
+    </div>
+
+    <div class="pick-group">
+      <div class="pick-label">Number of Questions</div>
+      <div class="pick-row" id="count-row">
+        <div class="pick-chip" data-count="5" onclick="selectCount(5,this)">5</div>
+        <div class="pick-chip selected" data-count="10" onclick="selectCount(10,this)">10</div>
+        <div class="pick-chip" data-count="15" onclick="selectCount(15,this)">15</div>
+        <div class="pick-chip" data-count="custom" onclick="selectCount('custom',this)">Custom</div>
+        <input type="number" class="custom-count-input" id="custom-count-input" min="1" max="20" placeholder="#" oninput="onCustomCount(this.value)">
+      </div>
+    </div>
+
+    <div class="pick-group">
+      <div class="pick-label">Session Timer</div>
+      <div class="pick-row" id="duration-row">
+        <div class="pick-chip" data-dur="15" onclick="selectDuration(15,this)">15 min</div>
+        <div class="pick-chip selected" data-dur="25" onclick="selectDuration(25,this)">25 min</div>
+      </div>
+    </div>
+
+    <div class="pick-group">
+      <div class="pick-label">Target Role / Company (optional)</div>
+      <input type="text" class="role-input" id="target-role-input" placeholder="e.g. Backend Developer at a startup" maxlength="200">
+      <div class="role-hint">Helps the AI tailor relevance scoring to what you're actually preparing for</div>
+    </div>
+
+    <button class="btn-continue enabled" onclick="goToStep('screen-instr')">Continue →</button>
+    <button class="btn-back" onclick="goToStep('screen-cat')">← Back</button>
+  </div>
+
+  <!-- STEP 3: INSTRUCTIONS -->
+  <div class="screen" id="screen-instr">
+    <p class="step-eyebrow">Step 3 of 4</p>
+    <h1 class="step-h1">Interview Instructions</h1>
+    <p class="step-sub" id="instr-sub">Here's what to expect before you begin</p>
+    <div class="instr-card">
+      <div class="instr-summary">
+        <div class="instr-stat"><div class="instr-stat-val" id="instr-cat">—</div><div class="instr-stat-lbl">Round Type</div></div>
+        <div class="instr-stat"><div class="instr-stat-val" id="instr-diff">—</div><div class="instr-stat-lbl">Difficulty</div></div>
+        <div class="instr-stat"><div class="instr-stat-val" id="instr-count">—</div><div class="instr-stat-lbl">Questions</div></div>
+        <div class="instr-stat"><div class="instr-stat-val" id="instr-dur">—</div><div class="instr-stat-lbl">Time limit</div></div>
+      </div>
+      <ul class="instr-list">
+        <li>Answers are evaluated by AI using the STAR method — Situation, Task, Action, Result — the same framework real recruiters use.</li>
+        <li>You can type your answer, or tap the mic to speak it — your words are transcribed live as you talk, and Gemini analyzes your actual recording for pace, confidence, and filler words.</li>
+        <li>A countdown timer runs for the whole session — watch the clock in the top bar.</li>
+        <li>You can bookmark any question to review it later from your profile.</li>
+        <li>One AI hint is available per question if you get stuck.</li>
+        <li>All scores are generated live by AI from what you actually say — there are no fake or placeholder scores.</li>
+      </ul>
+    </div>
+    <button class="btn-continue enabled" id="btn-start-hr" onclick="startInterview()">Start Interview →</button>
+    <button class="btn-back" onclick="goToStep('screen-diff')">← Back</button>
+  </div>
+
+  <!-- STEP 4: QUESTION SESSION -->
+  <div class="screen" id="screen-q">
+    <div class="q-header">
+      <span class="q-counter" id="q-counter">Question 1 of 10</span>
+      <div class="q-actions">
+        <button class="icon-btn" id="btn-bookmark" onclick="toggleBookmark()" title="Bookmark this question">☆</button>
+        <button class="icon-btn" id="btn-hint" onclick="requestHint()" title="Get one hint">💡</button>
+        <div class="hint-box" id="hint-box" role="status"><h5>💡 Hint</h5><p id="hint-text"></p></div>
+      </div>
+    </div>
+    <div class="q-card">
+      <div class="badge-row">
+        <span class="diff-badge" id="q-diff">Medium</span>
+        <span class="diff-badge cat-badge" id="q-cat">HR</span>
+      </div>
+      <div class="q-text" id="q-text">Loading...</div>
+    </div>
+
+    <div class="answer-label-row">
+      <div class="answer-label">Your Answer</div>
+      <button class="mic-btn" id="mic-btn" onclick="toggleMic()"><span class="mic-dot"></span><span id="mic-btn-label">🎤 Speak Answer</span></button>
+    </div>
+    <textarea id="answer-box" placeholder="Structure your answer using STAR: Situation, Task, Action, Result. Or tap the mic and speak your answer naturally..." oninput="updateChar()"></textarea>
+    <div class="char-count" id="char-count">0 characters</div>
+
+    <div class="btn-row">
+      <button class="btn-sec" onclick="skipQuestion()">Skip</button>
+      <div class="btn-row-right"><button class="btn-sec" id="btn-prev" onclick="prevQuestion()">← Previous</button><button class="btn-pri" id="btn-next" onclick="nextQuestion()">Next →</button></div>
+    </div>
+  </div>
+
+  <!-- SUBMITTING -->
+  <div class="screen" id="screen-submitting">
+    <div class="submitting">
+      <div class="spin-big"></div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:8px">Evaluating your answers...</h3>
+      <p style="color:var(--muted);font-size:14px">Gemini AI is scoring your responses against the STAR method. This may take a moment.</p>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="screen-result">
+    <div class="result-hero">
+      <div class="result-hero-label">Interview Completed</div>
+      <div class="score-big" id="final-score">--</div>
+      <div class="score-sub" id="result-cat-label">Overall Score</div>
+    </div>
+    <div class="result-stats">
+      <div class="result-stat"><div class="result-stat-val" id="stat-time" style="color:#6f97ec">--</div><div class="result-stat-lbl">Time Taken</div></div>
+      <div class="result-stat"><div class="result-stat-val" id="stat-answered" style="color:#e3a344">--</div><div class="result-stat-lbl">Questions Answered</div></div>
+      <div class="result-stat"><div class="result-stat-val" id="stat-confidence" style="color:#45b892">--</div><div class="result-stat-lbl">Avg Confidence</div></div>
+    </div>
+
+    <div class="star-card">
+      <h4>⭐ STAR Method Breakdown</h4>
+      <div class="star-grid" id="star-grid">
+        <div class="star-item"><div class="star-val" id="star-situation-val">--</div><div class="star-bar-track"><div class="star-bar-fill" id="star-situation-bar" style="background:#6f97ec;width:0%"></div></div><div class="star-label">Situation</div><div class="star-sub">Context set up</div></div>
+        <div class="star-item"><div class="star-val" id="star-task-val">--</div><div class="star-bar-track"><div class="star-bar-fill" id="star-task-bar" style="background:#e3a344;width:0%"></div></div><div class="star-label">Task</div><div class="star-sub">Goal clarity</div></div>
+        <div class="star-item"><div class="star-val" id="star-action-val">--</div><div class="star-bar-track"><div class="star-bar-fill" id="star-action-bar" style="background:#d97a68;width:0%"></div></div><div class="star-label">Action</div><div class="star-sub">Steps taken</div></div>
+        <div class="star-item"><div class="star-val" id="star-result-val">--</div><div class="star-bar-track"><div class="star-bar-fill" id="star-result-bar" style="background:#45b892;width:0%"></div></div><div class="star-label">Result</div><div class="star-sub">Outcome shown</div></div>
+      </div>
+    </div>
+
+    <div class="star-card" id="vocal-card" style="display:none">
+      <h4>🎙️ Vocal Delivery <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:11.5px">— from your actual voice recording, analyzed by Gemini</span></h4>
+      <div class="star-grid" id="vocal-grid">
+        <div class="star-item"><div class="star-val" id="vocal-pace-val">--</div><div class="star-bar-track"><div class="star-bar-fill" id="vocal-pace-bar" style="background:#6f97ec;width:0%"></div></div><div class="star-label">Pace</div><div class="star-sub" id="vocal-pace-label">—</div></div>
+        <div class="star-item"><div class="star-val" id="vocal-confidence-val">--</div><div class="star-bar-track"><div class="star-bar-fill" id="vocal-confidence-bar" style="background:#45b892;width:0%"></div></div><div class="star-label">Confidence</div><div class="star-sub">Vocal tone</div></div>
+        <div class="star-item"><div class="star-val" id="vocal-filler-val">--</div><div class="star-bar-track"><div class="star-bar-fill" id="vocal-filler-bar" style="background:#e3a344;width:0%"></div></div><div class="star-label">Filler Words</div><div class="star-sub" id="vocal-filler-count">—</div></div>
+        <div class="star-item"><div class="star-val" id="vocal-clarity-val">--</div><div class="star-bar-track"><div class="star-bar-fill" id="vocal-clarity-bar" style="background:#d97a68;width:0%"></div></div><div class="star-label">Clarity</div><div class="star-sub">Articulation</div></div>
+      </div>
+      <p id="vocal-summary-text" style="font-size:12.5px;color:var(--muted);margin-top:14px;line-height:1.6"></p>
+    </div>
+
+    <div class="result-grid">
+      <div class="result-card"><h4>💪 Strong Areas</h4><div id="strong-topics">—</div></div>
+      <div class="result-card"><h4>📉 Weak Areas</h4><div id="weak-topics">—</div></div>
+    </div>
+    <div class="ai-summary"><h4>🤖 AI Summary</h4><p id="ai-summary-text">-</p></div>
+    <div class="result-grid">
+      <div class="result-card"><h4>✅ Strengths</h4><ul class="result-list" id="strengths-list"></ul></div>
+      <div class="result-card"><h4>⚠️ Areas to Improve</h4><ul class="result-list" id="weak-list"></ul></div>
+    </div>
+    <div class="result-card" style="margin-bottom:18px"><h4 style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">🎯 Recommended Practice</h4><ul class="result-list" id="rec-list"></ul></div>
+    <div class="result-card" style="margin-bottom:18px">
+      <h4 style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">📋 Question-by-Question Review</h4>
+      <span class="eval-toggle" onclick="toggleEvalDetail()" id="eval-toggle-btn">Show details</span>
+      <div id="eval-detail" style="display:none;margin-top:12px"></div>
+    </div>
+    <div class="result-btns">
+      <button class="btn-pri" onclick="location.reload()">Try Again</button>
+      <button class="btn-sec" onclick="location.href='/pages/dashboard/dashboard.html'">Dashboard</button>
+      <button class="btn-sec" onclick="location.href='/pages/analytics/analytics.html'">Analytics</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="session-toast" id="session-toast" role="status"></div>
+<div class="modal-overlay" id="quit-modal" role="dialog" aria-modal="true" aria-labelledby="quit-modal-title">
+  <div class="confirm-modal">
+    <h3 id="quit-modal-title">Quit Test?</h3>
+    <p>This will end your current interview session.</p>
+    <div class="modal-actions"><button class="btn-sec" onclick="closeQuitModal()">Cancel</button><button class="btn-pri" onclick="quitActiveSession()">Quit Test</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="submit-modal" role="dialog" aria-modal="true" aria-labelledby="submit-modal-title">
+  <div class="confirm-modal">
+    <h3 id="submit-modal-title">Submit Test?</h3>
+    <p id="submit-modal-count"></p>
+    <div class="modal-actions"><button class="btn-sec" onclick="closeSubmitModal()">Keep Reviewing</button><button class="btn-pri" onclick="confirmSubmit()">Submit Test</button></div>
+  </div>
+</div>
+
+<script src="/assets/js/auth-guard.js"></script>
+<script src="hr-interview.js"></script>
+</body></html>

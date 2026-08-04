@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Resume Analyzer — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="resume.css">
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="topbar">
+  <a href="/pages/dashboard/dashboard.html" class="logo"><div class="logo-sq">SL</div>SkillLens AI</a>
+  <a href="/pages/dashboard/dashboard.html" style="font-size:13px;color:var(--muted);text-decoration:none">← Dashboard</a>
+</div>
+<div class="page">
+  <div class="page-title">Resume Analyzer</div>
+  <div class="page-sub">Upload your resume and get an instant AI-powered ATS score with detailed feedback</div>
+
+  <!-- UPLOAD -->
+  <div class="upload-zone" id="upload-zone" ondragover="drag(event)" ondragleave="dragEnd()" ondrop="drop(event)">
+    <input type="file" id="file-input" accept=".pdf" onchange="fileSelected(event)">
+    <div class="up-icon">📄</div>
+    <div class="up-title">Drop your resume here</div>
+    <div class="up-sub">or click to browse files</div>
+    <span class="up-browse">Browse PDF</span>
+    <div class="up-info">PDF only · Max 5MB · Your resume is analyzed securely</div>
+  </div>
+
+  <!-- UPLOADING -->
+  <div class="uploading" id="uploading">
+    <div class="spin"></div>
+    <h3 style="font-size:17px;font-weight:700;margin-bottom:6px">Analyzing your resume...</h3>
+    <p style="color:var(--muted);font-size:13px">AI is reading and evaluating your resume</p>
+    <div class="up-steps">
+      <div class="up-step" id="step1"><div class="step-dot"></div>Uploading PDF file</div>
+      <div class="up-step" id="step2"><div class="step-dot"></div>Extracting resume text</div>
+      <div class="up-step" id="step3"><div class="step-dot"></div>Running ATS analysis</div>
+      <div class="up-step" id="step4"><div class="step-dot"></div>Generating AI feedback</div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-section" id="result-section">
+    <div class="result-top">
+      <div class="ats-card">
+        <div class="ats-label">ATS Score</div>
+        <div class="ats-ring">
+          <svg viewBox="0 0 140 140" width="140" height="140">
+            <circle class="ats-ring-track" cx="70" cy="70" r="58"/>
+            <circle class="ats-ring-fill" id="ring-fill" cx="70" cy="70" r="58" stroke="#45b892" stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
+          </svg>
+          <div class="ats-score-text">
+            <div class="ats-num" id="ats-num">0</div>
+            <div class="ats-pct">/ 100</div>
+          </div>
+        </div>
+        <span class="ats-grade" id="ats-grade">--</span>
+        <div class="recruiter-impression">
+          <div class="ri-label">Recruiter Impression</div>
+          <div class="ri-val" id="ri-val">--</div>
+        </div>
+      </div>
+      <div class="fb-grid">
+        <div class="fb-card"><div class="fb-head"><span>🎯</span>Skills Found</div><ul class="fb-list fnd" id="fb-found"></ul></div>
+        <div class="fb-card"><div class="fb-head"><span>✅</span>Strengths</div><ul class="fb-list str" id="fb-strengths"></ul></div>
+        <div class="fb-card"><div class="fb-head"><span>⚠️</span>Weak Areas</div><ul class="fb-list wk" id="fb-weak"></ul></div>
+        <div class="fb-card"><div class="fb-head"><span>🔑</span>Missing Skills</div><ul class="fb-list sk" id="fb-skills"></ul></div>
+        <div class="fb-card"><div class="fb-head"><span>💡</span>Suggestions</div><ul class="fb-list sg" id="fb-sug"></ul></div>
+      </div>
+    </div>
+    <div class="projects-card">
+      <div class="fb-head" style="margin-bottom:8px"><span>🗂️</span>Projects Analysis</div>
+      <p id="projects-analysis-text">—</p>
+    </div>
+    <div class="result-btns">
+      <button class="btn-pri" onclick="resetUpload()">Analyze Another Resume</button>
+      <a href="/pages/hr-interview/hr-interview.html" class="btn-sec" style="text-decoration:none;display:inline-flex;align-items:center">Start HR Interview →</a>
+      <a href="/pages/dashboard/dashboard.html" class="btn-sec" style="text-decoration:none;display:inline-flex;align-items:center">← Dashboard</a>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="history-section">
+    <div style="font-size:15px;font-weight:700;margin-bottom:14px;color:rgba(255,255,255,.85)">Previous Uploads</div>
+    <div id="history-list"><p style="font-size:13px;color:var(--muted)">No previous resumes found.</p></div>
+  </div>
+</div>
+
+<script src="/assets/js/auth-guard.js"></script>
+<script src="resume.js"></script>
+</body></html>

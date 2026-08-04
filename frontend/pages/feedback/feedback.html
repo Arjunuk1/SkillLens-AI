@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Feedback — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="feedback.css">
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="topbar">
+  <a href="/pages/dashboard/dashboard.html" class="logo"><div class="logo-sq">SL</div>SkillLens AI</a>
+  <a href="/pages/dashboard/dashboard.html" style="font-size:13px;color:var(--muted);text-decoration:none">← Dashboard</a>
+</div>
+<div class="page">
+  <div class="page-title">AI Feedback</div>
+  <div class="page-sub">Detailed performance analysis powered by AI</div>
+
+  <!-- Latest feedback -->
+  <div id="latest-feedback">
+    <div class="empty">
+      <div style="font-size:40px;margin-bottom:14px">🤖</div>
+      <p>No feedback yet. Complete an interview to see your AI analysis.</p>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+        <a href="/pages/hr-interview/hr-interview.html"          class="btn-pri">Start HR Interview</a>
+        <a href="/pages/technical-interview/technical-interview.html"   class="btn-sec">Start Technical Interview</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div style="margin-top:32px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;color:rgba(255,255,255,.85)">Feedback History</div>
+    <div class="history-grid" id="history-grid">
+      <div class="empty" style="grid-column:span 2;padding:24px">No previous feedback found.</div>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/auth-guard.js"></script>
+<script src="feedback.js"></script>
+</body></html>

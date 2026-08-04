@@ -1,20 +1,11 @@
+const mongoose  = require('mongoose');
 const Interview = require('../models/Interview');
-const Question  = require('../models/Question');
 const Result    = require('../models/Result');
-const { evaluateHRAnswerWithGemini, generateFeedbackReport, generateHint } = require('../config/gemini');
+const { generateGroqQuestionSet, evaluateHRAnswerWithGemini, generateFeedbackReport, generateHint } = require('../config/gemini');
 
 const VALID_CATS  = ['HR', 'Behavioral', 'Situational', 'mixed'];
 const VALID_DIFFS = ['easy', 'medium', 'hard', 'mixed'];
-const VALID_DURATIONS = [15, 25, 45]; // minutes
-
-const shuffle = (arr) => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
+const VALID_DURATIONS = [15, 25]; // minutes
 
 // POST /api/interview/start  — HR / Behavioral / Situational interview
 const startInterview = async (req, res, next) => {
@@ -23,41 +14,39 @@ const startInterview = async (req, res, next) => {
     if (!VALID_CATS.includes(category))   return res.status(400).json({ success: false, message: `category must be one of: ${VALID_CATS.join(', ')}` });
     if (!VALID_DIFFS.includes(difficulty)) return res.status(400).json({ success: false, message: `difficulty must be one of: ${VALID_DIFFS.join(', ')}` });
 
-    const total = Math.min(20, Math.max(1, parseInt(count) || 10));
-    const durationMin = VALID_DURATIONS.includes(parseInt(duration)) ? parseInt(duration) : (total <= 5 ? 15 : total <= 10 ? 25 : 45);
+    const total = Math.min(20, Math.max(1, parseInt(count, 10) || 10));
+    const requestedDuration = parseInt(duration, 10) || 25;
+    if (!VALID_DURATIONS.includes(requestedDuration)) return res.status(400).json({ success: false, message: 'Duration must be 15 or 25 minutes' });
+    const durationSeconds = requestedDuration * 60;
 
-    const match = { type: 'hr', isActive: true };
-    match.category = category === 'mixed' ? { $in: ['HR','Behavioral','Situational'] } : category;
-    if (difficulty !== 'mixed') match.difficulty = difficulty;
+    const generated = await generateGroqQuestionSet({
+      mode: 'hr',
+      category,
+      difficulty,
+      count: total,
+      targetRole,
+    });
 
-    let picked = await Question.aggregate([{ $match: match }, { $sample: { size: total } }]);
-
-    // Backfill across difficulty if a narrow combo doesn't have enough questions
-    if (picked.length < total) {
-      const have = new Set(picked.map(q => q._id.toString()));
-      const looseMatch = { type: 'hr', isActive: true };
-      looseMatch.category = category === 'mixed' ? { $in: ['HR','Behavioral','Situational'] } : category;
-      const backfill = await Question.aggregate([
-        { $match: { ...looseMatch, _id: { $nin: [...have].map(id => new (require('mongoose').Types.ObjectId)(id)) } } },
-        { $sample: { size: total - picked.length } },
-      ]);
-      picked = [...picked, ...backfill];
+    if (!generated.length) {
+      return res.status(502).json({ success: false, message: 'Could not generate HR questions right now. Please try again.' });
     }
 
-    if (!picked.length) return res.status(404).json({ success: false, message: `No HR questions found for this selection. Please seed the database.` });
-
-    picked = shuffle(picked);
+    const savedQuestions = generated.map((q) => ({
+      questionId: new mongoose.Types.ObjectId(),
+      text: q.text,
+      qType: 'short',
+      tags: q.tags || [q.category],
+      difficulty: q.difficulty || difficulty,
+      answer: '',
+    }));
 
     const session = await Interview.create({
       user: req.user._id, type: 'hr',
       category: category === 'mixed' ? null : category,
-      difficulty, durationSeconds: durationMin * 60,
+      difficulty, durationSeconds,
       targetRole: targetRole.trim().slice(0, 200),
       startedAt: new Date(),
-      questions: picked.map(q => ({
-        questionId: q._id, text: q.text, qType: 'short',
-        tags: q.tags || [], difficulty: q.difficulty || 'medium', answer: '',
-      })),
+      questions: savedQuestions,
       status: 'in-progress',
     });
 
@@ -67,12 +56,34 @@ const startInterview = async (req, res, next) => {
         sessionId: session._id, category, difficulty,
         durationSeconds: session.durationSeconds,
         totalQuestions: session.questions.length,
-        questions: session.questions.map(q => ({
-          id: q.questionId, text: q.text, difficulty: q.difficulty, tags: q.tags,
-          category: picked.find(p => p._id.toString() === q.questionId.toString())?.category,
+        questions: generated.map((q, index) => ({
+          id: session.questions[index].questionId,
+          text: q.text,
+          difficulty: q.difficulty,
+          tags: q.tags,
+          category: q.category,
+          qType: 'short',
         })),
       },
     });
+  } catch (err) { next(err); }
+};
+
+// POST /api/interview/quit
+const quitInterview = async (req, res, next) => {
+  try {
+    const { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ success: false, message: 'sessionId is required' });
+
+    const session = await Interview.findOne({ _id: sessionId, user: req.user._id, type: 'hr' });
+    if (!session) return res.status(404).json({ success: false, message: 'Interview session not found' });
+    if (session.status === 'completed') return res.status(400).json({ success: false, message: 'Session already completed' });
+
+    session.status = 'abandoned';
+    session.completedAt = new Date();
+    await session.save();
+
+    res.json({ success: true, message: 'Interview session ended' });
   } catch (err) { next(err); }
 };
 
@@ -84,7 +95,7 @@ const submitInterview = async (req, res, next) => {
 
     const session = await Interview.findOne({ _id: sessionId, user: req.user._id });
     if (!session)  return res.status(404).json({ success: false, message: 'Interview session not found' });
-    if (session.status === 'completed') return res.status(400).json({ success: false, message: 'Session already submitted' });
+    if (session.status !== 'in-progress') return res.status(400).json({ success: false, message: 'Session is no longer active' });
 
     let totalScore = 0, scoredCount = 0;
     const evaluations = [];
@@ -104,18 +115,32 @@ const submitInterview = async (req, res, next) => {
     // Gemini's 20MB inline-data limit once the prompt text is added.
     const MAX_AUDIO_BASE64_CHARS = 14 * 1024 * 1024;
 
-    for (const ans of answers) {
-      const q = session.questions.find(q => q.questionId?.toString() === ans.questionId || q.text === ans.question);
-      if (!q) continue;
+    for (const q of session.questions) {
+      const ans = answers.find(answer => q.questionId?.toString() === answer.questionId || q.text === answer.question) || { answer: '' };
       q.answer = ans.answer;
+
+      if (!String(ans.answer || '').trim()) {
+        const score = 0;
+        totalScore += score; scoredCount += 1;
+        q.score = score;
+        addTopicScore(session.category || 'HR', score);
+        evaluations.push({ question: q.text, answer: '', score, clarity: 0, confidence: 0, structure: 0, relevance: 0, star: { situation: 0, task: 0, action: 0, result: 0 }, strengths: [], weaknesses: ['No answer provided'], suggestions: ['Answer this question before submitting.'], idealAnswer: '' });
+        continue;
+      }
 
       let audio = null;
       if (ans.audioBase64 && ans.audioMimeType) {
         if (ans.audioBase64.length > MAX_AUDIO_BASE64_CHARS) {
-          console.error(`Audio for question ${q._id} exceeds size limit, skipping voice analysis for this answer.`);
+          console.error(`[HR-VOCAL] Audio for question ${q._id} exceeds size limit (${ans.audioBase64.length} chars), skipping voice analysis for this answer.`);
         } else {
-          audio = { base64: ans.audioBase64, mimeType: ans.audioMimeType };
+          // Gemini's documented audio MIME list includes audio/webm, audio/mp4,
+          // and audio/opus — but not bare "audio/ogg". Normalize defensively
+          // here too, in case a stale cached frontend sends the old label.
+          const normalizedMime = ans.audioMimeType === 'audio/ogg' ? 'audio/opus' : ans.audioMimeType;
+          audio = { base64: ans.audioBase64, mimeType: normalizedMime };
         }
+      } else {
+        console.log(`[HR-VOCAL] No audio present for question ${q._id} (text-only answer or recording failed client-side).`);
       }
 
       let ev = null;
@@ -123,8 +148,16 @@ const submitInterview = async (req, res, next) => {
       // Attempt 2: text-only fallback — protects the interview if the audio
       // format/size causes a transient Gemini failure.
       for (let attempt = 0; attempt < 2 && !ev; attempt++) {
-        try { ev = await evaluateHRAnswerWithGemini(q.text, ans.answer, session.targetRole, attempt === 0 ? audio : null); }
-        catch (e) { console.error(`Eval error (attempt ${attempt + 1}):`, e.message); }
+        const usingAudio = attempt === 0 && audio;
+        try {
+          ev = await evaluateHRAnswerWithGemini(q.text, ans.answer, session.targetRole, usingAudio ? audio : null);
+          if (usingAudio) {
+            console.log(`[HR-VOCAL] Audio attempt succeeded for question ${q._id} (mime=${audio.mimeType}). vocalDelivery ${ev.vocalDelivery ? 'RECEIVED' : 'MISSING from Gemini response'}.`);
+          }
+        }
+        catch (e) {
+          console.error(`[HR-VOCAL] Eval error (attempt ${attempt + 1}, ${usingAudio ? `audio mime=${audio.mimeType}` : 'text-only'}):`, e.message);
+        }
       }
       if (ev) {
         totalScore += ev.score; scoredCount += 1;
@@ -171,10 +204,15 @@ const submitInterview = async (req, res, next) => {
     } : { situation: null, task: null, action: null, result: null };
 
     let feedback;
-    try { feedback = await generateFeedbackReport({ type: 'hr', category: session.category, targetRole: session.targetRole, evaluations, avgScore }); }
-    catch (e) {
-      console.error('Feedback error:', e.message);
-      feedback = { overallScore: avgScore, strengths: [], weaknesses: [], suggestions: [], summary: `AI summary unavailable (${e.message}). Score is based on ${scoredCount}/${answers.length} evaluated answers.` };
+    const answeredCount = evaluations.filter(e => String(e.answer || '').trim()).length;
+    if (answeredCount === 0) {
+      feedback = { overallScore: 0, communication: 0, technicalAccuracy: 0, confidence: 0, clarity: 0, problemSolving: 0, strengths: [], weaknesses: ['No answers were submitted.'], suggestions: ['Attempt each question before submitting your next test.'], summary: 'No answers were submitted, so this interview received a score of 0/100.' };
+    } else {
+      try { feedback = await generateFeedbackReport({ type: 'hr', category: session.category, targetRole: session.targetRole, evaluations, avgScore }); }
+      catch (e) {
+        console.error('Feedback error:', e.message);
+        feedback = { overallScore: avgScore, strengths: [], weaknesses: [], suggestions: [], summary: `AI summary unavailable (${e.message}). Score is based on ${scoredCount}/${session.questions.length} evaluated answers.` };
+      }
     }
 
     const topicEntries = Object.entries(topicScores).map(([topic, d]) => ({ topic, avg: Math.round(d.total / d.count) }));
@@ -187,12 +225,12 @@ const submitInterview = async (req, res, next) => {
 
     const result = await Result.create({
       user: req.user._id, interview: session._id,
-      score:          feedback.overallScore || avgScore,
-      communication:  feedback.communication   || avgScore,
-      technicalScore: feedback.technicalAccuracy || avgScore,
-      confidence:     feedback.confidence      || avgScore,
-      clarity:        feedback.clarity         || avgScore,
-      problemSolving: feedback.problemSolving  || avgScore,
+      score:          avgScore,
+      communication:  feedback.communication ?? avgScore,
+      technicalScore: feedback.technicalAccuracy ?? avgScore,
+      confidence:     feedback.confidence ?? avgScore,
+      clarity:        feedback.clarity ?? avgScore,
+      problemSolving: feedback.problemSolving ?? avgScore,
       strengths:      feedback.strengths       || [],
       weaknesses:     feedback.weaknesses      || [],
       suggestions:    feedback.suggestions     || [],
@@ -202,7 +240,7 @@ const submitInterview = async (req, res, next) => {
       starBreakdown, vocalDelivery,
     });
 
-    session.score  = feedback.overallScore || avgScore;
+    session.score  = avgScore;
     session.status = 'completed';
     session.completedAt = new Date();
     await session.save();
@@ -286,4 +324,4 @@ const getInterviewById = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { startInterview, submitInterview, getHint, toggleBookmark, getBookmarks, getInterviewHistory, getInterviewById };
+module.exports = { startInterview, submitInterview, quitInterview, getHint, toggleBookmark, getBookmarks, getInterviewHistory, getInterviewById };

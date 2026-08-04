@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<div id="toast" class="toast"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="/pages/dashboard/dashboard.html" class="sidebar-logo">
+    <div class="logo-sq">SL</div>SkillLens AI
+  </a>
+  <div class="nav-section">Main</div>
+  <a href="/pages/landing/landing.html" class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+    Main Page
+  </a>
+  <a href="/pages/dashboard/dashboard.html" class="nav-item active" data-view="dashboard" onclick="return showView('dashboard');">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+  <a href="/pages/resume/resume.html" class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+    Resume Analyzer
+  </a>
+  <div class="nav-section">Practice</div>
+  <a href="/pages/hr-interview/hr-interview.html" class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    HR Interview
+  </a>
+  <a href="/pages/technical-interview/technical-interview.html" class="nav-item">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    Technical Interview
+  </a>
+  <div class="nav-section">Progress</div>
+  <a href="/pages/dashboard/dashboard.html#analytics" class="nav-item" data-view="analytics" onclick="return showView('analytics');">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Analytics
+  </a>
+  <a href="/pages/dashboard/dashboard.html#profile" class="nav-item" data-view="profile" onclick="return showView('profile');">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    Profile
+  </a>
+  <div class="sidebar-spacer"></div>
+  <div class="user-card">
+    <div class="user-avatar" id="sb-avatar">AK</div>
+    <div class="user-name" id="sb-name">Loading...</div>
+    <div class="user-email" id="sb-email">--</div>
+  </div>
+  <a class="nav-item logout" onclick="logout()" style="margin-bottom:12px;cursor:pointer">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Logout
+  </a>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<div id="view-dashboard" class="view active">
+  <div class="topbar">
+    <div class="welcome-text">
+      <h1 id="welcome-msg">Welcome back 👋</h1>
+      <p id="welcome-sub">Ready for your next interview session?</p>
+    </div>
+    <div class="streak-badge" id="streak-badge">🔥 <span id="streak-val">0</span> day streak</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card blue">
+      <div class="stat-icon">🎙️</div>
+      <div class="stat-val c-b sk" id="st-interviews" style="height:34px;width:60px">&nbsp;</div>
+      <div class="stat-lbl">Interviews taken</div>
+      <div class="stat-change up" id="st-int-change"></div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-val c-p sk" id="st-avg" style="height:34px;width:60px">&nbsp;</div>
+      <div class="stat-lbl">Average score</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">📄</div>
+      <div class="stat-val c-g sk" id="st-resume" style="height:34px;width:60px">&nbsp;</div>
+      <div class="stat-lbl">Resume score</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-icon">📈</div>
+      <div class="stat-val c-a sk" id="st-impr" style="height:34px;width:60px">&nbsp;</div>
+      <div class="stat-lbl">Improvement rate</div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="section-hdr">Quick Actions</div>
+  <div class="actions-grid">
+    <a href="/pages/hr-interview/hr-interview.html" class="action-card blue-a">
+      <div class="action-icon">👥</div>
+      <div class="action-title">Start HR Interview</div>
+      <div class="action-sub">Behavioral & situational questions</div>
+      <span class="action-arrow">→</span>
+    </a>
+    <a href="/pages/technical-interview/technical-interview.html" class="action-card purple-a">
+      <div class="action-icon">💻</div>
+      <div class="action-title">Start Technical Interview</div>
+      <div class="action-sub">DSA, OOP, DBMS, OS, CN & Web Dev</div>
+      <span class="action-arrow">→</span>
+    </a>
+    <a href="/pages/resume/resume.html" class="action-card green-a">
+      <div class="action-icon">📋</div>
+      <div class="action-title">Analyze Resume</div>
+      <div class="action-sub">Get your ATS score and AI feedback</div>
+      <span class="action-arrow">→</span>
+    </a>
+  </div>
+
+  <!-- WEEKLY PROGRESS / STREAK / GOAL -->
+  <div class="progress-row">
+    <div class="card">
+      <div class="section-hdr" style="margin-bottom:2px">📅 Weekly Progress</div>
+      <div style="font-size:11.5px;color:var(--muted)">Interviews completed this week</div>
+      <div class="heatmap-row" id="heatmap-row">
+        <div class="sk" style="width:100%;height:34px;border-radius:8px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="streak-card-big">
+        <div class="streak-flame">🔥</div>
+        <div class="streak-num" id="dash-streak-num">0</div>
+        <div class="streak-sub">Day Streak</div>
+        <div class="streak-sub" id="streak-motivation" style="margin-top:8px">Start a session today to begin your streak</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-hdr" style="margin-bottom:2px">🎯 Interview Goal</div>
+      <div style="font-size:11.5px;color:var(--muted)">Weekly target</div>
+      <div class="goal-bar-track"><div class="goal-bar-fill" id="goal-bar-fill" style="width:0%"></div></div>
+      <div class="goal-text" id="goal-text">0 / 10 interviews</div>
+      <div class="goal-sub" id="goal-sub">Keep practicing to hit your weekly goal</div>
+    </div>
+  </div>
+
+  <!-- PLACEMENT READINESS -->
+  <div class="card readiness-card">
+    <div class="section-hdr">🚀 Placement Readiness</div>
+    <div class="readiness-top">
+      <div class="readiness-ring">
+        <svg viewBox="0 0 110 110" width="110" height="110">
+          <circle class="readiness-ring-track" cx="55" cy="55" r="46"/>
+          <circle class="readiness-ring-fill" id="readiness-ring-fill" cx="55" cy="55" r="46" stroke-dasharray="289" stroke-dashoffset="289"/>
+        </svg>
+        <div class="readiness-ring-text"><div class="readiness-num" id="readiness-num">0%</div><div class="readiness-lbl">Ready</div></div>
+      </div>
+      <div class="readiness-desc">
+        <h4 id="readiness-title">Building your profile</h4>
+        <p id="readiness-desc-text">Complete more interviews and upload your resume to get an accurate placement readiness score based on your real performance.</p>
+      </div>
+    </div>
+    <div class="readiness-breakdown" id="readiness-breakdown">
+      <div class="sk" style="height:50px;border-radius:8px"></div>
+      <div class="sk" style="height:50px;border-radius:8px"></div>
+      <div class="sk" style="height:50px;border-radius:8px"></div>
+      <div class="sk" style="height:50px;border-radius:8px"></div>
+      <div class="sk" style="height:50px;border-radius:8px"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom-grid">
+    <!-- Recent Activity -->
+    <div class="card">
+      <div class="section-hdr" style="margin-bottom:14px">Recent Activity</div>
+      <div id="activity-list">
+        <div class="activity-item"><div class="act-left"><div class="act-ico sk" style="width:36px;height:36px">&nbsp;</div><div><div class="sk" style="width:120px;height:13px;margin-bottom:5px">&nbsp;</div><div class="sk" style="width:80px;height:10px">&nbsp;</div></div></div><div class="sk" style="width:60px;height:24px;border-radius:6px">&nbsp;</div></div>
+        <div class="activity-item"><div class="act-left"><div class="act-ico sk" style="width:36px;height:36px">&nbsp;</div><div><div class="sk" style="width:120px;height:13px;margin-bottom:5px">&nbsp;</div><div class="sk" style="width:80px;height:10px">&nbsp;</div></div></div><div class="sk" style="width:60px;height:24px;border-radius:6px">&nbsp;</div></div>
+        <div class="activity-item"><div class="act-left"><div class="act-ico sk" style="width:36px;height:36px">&nbsp;</div><div><div class="sk" style="width:120px;height:13px;margin-bottom:5px">&nbsp;</div><div class="sk" style="width:80px;height:10px">&nbsp;</div></div></div><div class="sk" style="width:60px;height:24px;border-radius:6px">&nbsp;</div></div>
+      </div>
+    </div>
+    <!-- Recommendations -->
+    <div class="card">
+      <div class="section-hdr" style="margin-bottom:14px">💡 Recommendations</div>
+      <div id="rec-list">
+        <div class="sk" style="height:44px;margin-bottom:8px;border-radius:10px">&nbsp;</div>
+        <div class="sk" style="height:44px;margin-bottom:8px;border-radius:10px">&nbsp;</div>
+        <div class="sk" style="height:44px;border-radius:10px">&nbsp;</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /view-dashboard -->
+
+<div id="view-analytics" class="view">
+
+  <div class="page-title">Performance Analytics</div>
+  <div class="page-sub">Track your progress, identify weak areas, and celebrate your growth</div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-icon">🎙️</div><div class="stat-val c-b" id="an-total">-</div><div class="stat-lbl">Interviews taken</div></div>
+    <div class="stat"><div class="stat-icon">⭐</div><div class="stat-val c-p" id="an-avg">-</div><div class="stat-lbl">Average score</div></div>
+    <div class="stat"><div class="stat-icon">📈</div><div class="stat-val c-g" id="an-impr">-</div><div class="stat-lbl">Improvement</div></div>
+    <div class="stat"><div class="stat-icon">📄</div><div class="stat-val c-a" id="an-resume">-</div><div class="stat-lbl">Resume score</div></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">📊 Score Trend</div>
+      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🥧 Category Breakdown</div>
+      <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="area-row">
+    <div class="chart-card">
+      <div class="chart-title">🕸️ Skill Radar</div>
+      <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📋 Category Performance</div>
+      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🥧 Question Types</div>
+      <div class="chart-wrap"><canvas id="typeChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="activity-card" style="margin-bottom:20px">
+    <div class="activity-title">🔥 Practice Frequency <span style="font-weight:400;color:var(--muted);font-size:12px">(last 10 weeks)</span></div>
+    <div class="heatmap-grid" id="freq-heatmap"></div>
+    <div class="heatmap-legend">Less <div class="heatmap-cell"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l4"></div> More</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">
+    <div class="activity-card">
+      <div class="activity-title">🕐 Recent Activity</div>
+      <div id="an-activity-list"><div class="empty">No interviews yet. Start practicing!</div></div>
+    </div>
+    <div class="activity-card">
+      <div class="activity-title">🏆 Highlights</div>
+      <div class="highlights">
+        <div class="hl"><h4>Strongest Area</h4><div class="hl-val c-g" id="hl-strong">-</div></div>
+        <div class="hl"><h4>Weakest Area</h4><div class="hl-val c-r" id="hl-weak">-</div></div>
+        <div class="hl"><h4>Best Score</h4><div class="hl-val c-a" id="hl-best">-</div></div>
+        <div class="hl"><h4>Sessions This Week</h4><div class="hl-val c-b" id="hl-week">-</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /view-analytics -->
+
+<div id="view-profile" class="view">
+
+  <div class="profile-banner">
+    <div class="avatar" id="avatar-initials">AK</div>
+    <div class="profile-info">
+      <h2 id="prof-name">Loading...</h2>
+      <p id="prof-sub">--</p>
+      <div class="prof-tags">
+        <span class="ptag" id="prof-branch">CSE</span>
+        <span class="ptag" id="prof-year">3rd Year</span>
+        <span class="ptag" id="prof-college">IIT Delhi</span>
+      </div>
+    </div>
+    <button class="edit-btn" onclick="toggleEdit()">✏️ Edit Profile</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val c-b" id="s-interviews">-</div><div class="stat-lbl">Interviews</div></div>
+    <div class="stat"><div class="stat-val c-p" id="s-avg">-</div><div class="stat-lbl">Avg Score</div></div>
+    <div class="stat"><div class="stat-val c-a" id="s-streak">-</div><div class="stat-lbl">Day Streak 🔥</div></div>
+    <div class="stat"><div class="stat-val c-g" id="s-resume">-</div><div class="stat-lbl">Resume Score</div></div>
+  </div>
+
+  <div class="game-row">
+    <div class="card level-card">
+      <div class="level-badge"><span class="lv-num" id="lv-num">1</span><span class="lv-lbl">Level</span></div>
+      <div class="level-info">
+        <div class="level-title" id="level-title">Beginner</div>
+        <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+        <div class="xp-text" id="xp-text">0 / 150 XP</div>
+      </div>
+    </div>
+    <div class="card coins-card">
+      <div class="coins-icon">🪙</div>
+      <div class="coins-val" id="coins-val">0</div>
+      <div class="coins-lbl">Coins Earned</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">🎖️ Badges</div>
+      <div class="badge-grid" id="badge-grid"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">🔖 Bookmarked Questions</div>
+      <div class="bookmark-list" id="bookmark-list"><div style="color:var(--muted);font-size:12.5px;text-align:center;padding:16px 0">No bookmarks yet — save questions during a technical interview to review them here.</div></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">🏅 Achievements</div>
+      <div class="ach-grid" id="ach-grid">
+        <div class="ach locked"><div class="ach-icon">🎯</div><div><div class="ach-title">First Step</div><div class="ach-desc">Complete first interview</div></div></div>
+        <div class="ach locked"><div class="ach-icon">🔥</div><div><div class="ach-title">Consistent</div><div class="ach-desc">10 interviews done</div></div></div>
+        <div class="ach locked"><div class="ach-icon">⭐</div><div><div class="ach-title">Interview Pro</div><div class="ach-desc">25 interviews done</div></div></div>
+        <div class="ach locked"><div class="ach-icon">🏆</div><div><div class="ach-title">Elite</div><div class="ach-desc">50 interviews done</div></div></div>
+        <div class="ach locked"><div class="ach-icon">📄</div><div><div class="ach-title">Resume Ready</div><div class="ach-desc">Upload resume</div></div></div>
+        <div class="ach locked"><div class="ach-icon">🎖️</div><div><div class="ach-title">ATS Champion</div><div class="ach-desc">Resume score &gt; 80</div></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">💡 Personalized Recommendations</div>
+      <div class="rec-list" id="pv-rec-list">
+        <div class="rec"><div class="rec-icon" style="background:rgba(217,122,104,.12);color:#d97a68">📄</div><div><div class="rec-text">Upload your resume to get started</div><div class="rec-pri high">High priority</div></div></div>
+        <div class="rec"><div class="rec-icon" style="background:rgba(111,151,236,.12);color:#6f97ec">🎙️</div><div><div class="rec-text">Practice HR questions to build confidence</div><div class="rec-pri medium">Medium priority</div></div></div>
+        <div class="rec"><div class="rec-icon" style="background:rgba(227,163,68,.12);color:#e3a344">💻</div><div><div class="rec-text">Try DSA questions to sharpen your skills</div><div class="rec-pri medium">Medium priority</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">👤 Edit Profile</div>
+    <div class="info-grid">
+      <div class="info-item"><label>Full name</label><input id="inp-name" disabled></div>
+      <div class="info-item"><label>Email</label><input id="inp-email" disabled></div>
+      <div class="info-item"><label>College</label><input id="inp-college" disabled placeholder="Your college"></div>
+      <div class="info-item"><label>Branch</label><input id="inp-branch" disabled placeholder="Your branch"></div>
+      <div class="info-item"><label>Year</label><input id="inp-year" type="number" min="1" max="5" disabled placeholder="1-5"></div>
+    </div>
+    <button class="save-btn" id="save-btn" onclick="saveProfile()">Save Changes</button>
+  </div>
+</div>
+<!-- /view-profile -->
+
+</div>
+
+<script src="/assets/js/auth-guard.js"></script>
+<script src="dashboard.js"></script>
+</body></html>
