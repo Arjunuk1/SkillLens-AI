@@ -1,20 +1,16 @@
 const express  = require('express');
 const multer   = require('multer');
-const path     = require('path');
 const router   = express.Router();
 const { protect } = require('../middleware/auth');
 const { uploadResume, getResumeHistory, getResumeById } = require('../controllers/resumeController');
 
-const crypto = require('crypto');
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '../uploads')),
-  // Random, unguessable filename — the old pattern (resume_<userId>_<timestamp>.pdf) was
-  // predictable and these files are served without auth, so a guessable name meant anyone
-  // could potentially enumerate other users' resumes (which contain real PII).
-  filename:    (req, file, cb) => cb(null, `resume_${crypto.randomBytes(24).toString('hex')}${path.extname(file.originalname)}`),
-});
+// In-memory storage: the file is held in RAM only (req.file.buffer) and never
+// written to disk. Needed for serverless hosts like Vercel, whose filesystem
+// is read-only/ephemeral — a disk-based upload would silently fail to persist
+// between requests. We only ever need the file transiently anyway (to extract
+// its text and hand that to Gemini), so nothing is lost by not saving it.
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype === 'application/pdf') cb(null, true);

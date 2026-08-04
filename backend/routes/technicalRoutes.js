@@ -2,12 +2,13 @@ const express = require('express');
 const router  = express.Router();
 const { protect } = require('../middleware/auth');
 const {
-  startTechnical, submitTechnical, getHint,
+  startTechnical, submitTechnical, quitTechnical, getHint,
   toggleBookmark, getBookmarks, getTechnicalHistory,
 } = require('../controllers/technicalController');
 
 router.post('/start',      protect, startTechnical);
 router.post('/submit',     protect, submitTechnical);
+router.post('/quit',       protect, quitTechnical);
 router.post('/hint',       protect, getHint);
 router.post('/bookmark',   protect, toggleBookmark);
 router.get('/bookmarks',   protect, getBookmarks);

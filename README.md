@@ -69,6 +69,8 @@ MONGO_URI=mongodb+srv://<your-db-username>:<your-db-password>@<your-cluster>.mon
 JWT_SECRET=<a long random string - generate your own, never share this>
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:3000
+GEMINI_API_KEY=<your-gemini-key>
+GROQ_API_KEYS=<comma-separated-groq-keys>
 ```
 **Never commit your real `.env` file or paste real credentials into documentation.** `.env` is already in `.gitignore` — keep it that way.
 

@@ -1,0 +1,15 @@
+/* ═══════════════════════════════════════════════════
+   SkillLens AI — shared base styles
+   Loaded before every page's own stylesheet. Holds only
+   the rules that are byte-identical across every page
+   (reset, selection, focus ring). Each page's own CSS
+   file still declares its full :root token set — a few
+   pages define one or two extra tokens beyond this
+   common set (e.g. --elevated, --border-h), so the
+   per-page :root blocks were intentionally left in place
+   rather than force-split, to avoid any risk of a page
+   losing a variable it depends on.
+═══════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+::selection{background:rgba(227,163,68,.22);color:#edeef0}
+:focus-visible{outline:2px solid #e3a344;outline-offset:2px;border-radius:4px}

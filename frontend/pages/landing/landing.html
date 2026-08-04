@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillLens AI — Ace Your Interviews with AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Fraunces:ital,opsz,wght@1,9..144,500&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="landing.css">
+</head>
+
+<body>
+
+  <!-- ═══ LOADER ═══ -->
+  <div id="loader">
+    <div class="ld-wrap">
+      <div class="ld-logo">
+        <div class="ld-icon">SL</div>
+        <div class="ld-name">Skill<span>Lens AI</span></div>
+      </div>
+      <div class="ld-bar">
+        <div class="ld-fill"></div>
+      </div>
+      <p class="ld-txt">Preparing your AI interview coach...</p>
+    </div>
+  </div>
+
+  <!-- ═══ CURSOR GLOW ═══ -->
+  <div id="cursor-glow"></div>
+
+  <!-- ═══ BACKGROUND ═══ -->
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <canvas id="particles"></canvas>
+
+  <!-- ═══════════════════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════════════════ -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <div class="nav-mark">SL</div>
+      SkillLens AI
+    </a>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#preview">Dashboard</a>
+    </div>
+    <div class="nav-btns">
+      <div class="nav-auth">
+        <button class="btn-nav-ghost" id="btn-open-login">Log in</button>
+        <button class="btn-nav-primary" id="btn-open-signup">Sign up free</button>
+      </div>
+      <div class="nav-user" id="nav-user">
+        <span class="nav-avatar" id="nav-avatar">SL</span>
+        <span id="nav-user-name">Student</span>
+        <button class="btn-nav-primary" id="btn-open-dashboard">Dashboard</button>
+        <button class="btn-nav-ghost" id="btn-logout">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════
+     LOGIN MODAL
+═══════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-login" role="dialog" aria-modal="true" aria-labelledby="login-heading">
+    <div class="modal-box">
+      <button class="modal-close-btn" id="close-login" aria-label="Close login modal">✕</button>
+
+      <div class="modal-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"
+          aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4l3 3" />
+        </svg>
+        Your AI interview coach is ready
+      </div>
+
+      <h2 class="modal-title" id="login-heading">Welcome back</h2>
+      <p class="modal-subtitle">Sign in to continue your practice journey</p>
+
+      <!-- Alert banner -->
+      <div class="modal-alert" id="login-alert" role="alert"></div>
+
+      <!-- Email -->
+      <div class="form-field">
+        <label for="login-email">Email address</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+        <div class="field-error" id="login-email-err">Please enter a valid email address</div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-field">
+        <label for="login-pass">Password</label>
+        <div class="pass-wrap">
+          <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+          <button class="pass-eye" type="button" data-target="login-pass"
+            aria-label="Toggle password visibility">👁</button>
+        </div>
+        <div class="field-error" id="login-pass-err">Password is required</div>
+      </div>
+
+      <button class="btn-submit" id="btn-login-submit">
+        <span class="btn-text">Log in to SkillLens AI</span>
+        <div class="btn-spinner" aria-hidden="true"></div>
+      </button>
+
+      <p style="text-align:right;margin-top:11px;font-size:12px;color:var(--muted);cursor:pointer" id="forgot-link">
+        Forgot password?</p>
+
+      <div class="modal-divider">or</div>
+      <div id="google-btn-login" class="google-btn-container"></div>
+      <p class="modal-switch">Don't have an account? <a id="switch-to-signup">Create one free →</a></p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+     SIGNUP MODAL
+═══════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-signup" role="dialog" aria-modal="true" aria-labelledby="signup-heading">
+    <div class="modal-box modal-signup-box">
+      <button class="modal-close-btn" id="close-signup" aria-label="Close signup modal">✕</button>
+
+      <div class="modal-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"
+          aria-hidden="true">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+        Join 12,000+ students already practicing
+      </div>
+
+      <h2 class="modal-title" id="signup-heading">Create your account</h2>
+      <p class="modal-subtitle">Free forever — no credit card required</p>
+
+      <!-- Alert banner -->
+      <div class="modal-alert" id="signup-alert" role="alert"></div>
+
+      <!-- Row 1: Name + Email -->
+      <div class="form-row">
+        <div class="form-field">
+          <label for="su-name">Full name</label>
+          <input type="text" id="su-name" placeholder="Arjun Sharma" autocomplete="name">
+          <div class="field-error" id="su-name-err">Full name is required</div>
+        </div>
+        <div class="form-field">
+          <label for="su-email">Email address</label>
+          <input type="email" id="su-email" placeholder="you@example.com" autocomplete="email">
+          <div class="field-error" id="su-email-err">Valid email is required</div>
+        </div>
+      </div>
+
+      <!-- Row 2: College + Branch -->
+      <div class="form-row">
+        <div class="form-field">
+          <label for="su-college">College / University</label>
+          <input type="text" id="su-college" placeholder="IIT Delhi">
+        </div>
+        <div class="form-field">
+          <label for="su-branch">Branch</label>
+          <input type="text" id="su-branch" placeholder="Computer Science">
+        </div>
+      </div>
+
+      <!-- Row 3: Year + Password -->
+      <div class="form-row">
+        <div class="form-field">
+          <label for="su-year">Year of study</label>
+          <select id="su-year">
+            <option value="" disabled selected>Select year</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+            <option value="5">5th Year</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="su-pass">Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="su-pass" placeholder="Min. 6 characters" autocomplete="new-password">
+            <button class="pass-eye" type="button" data-target="su-pass"
+              aria-label="Toggle password visibility">👁</button>
+          </div>
+          <div class="pass-strength-bar">
+            <div class="pass-strength-fill" id="strength-fill"></div>
+          </div>
+          <div class="pass-strength-label" id="strength-label"></div>
+          <div class="field-error" id="su-pass-err">Password must be at least 6 characters</div>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="btn-signup-submit">
+        <span class="btn-text">Create free account</span>
+        <div class="btn-spinner" aria-hidden="true"></div>
+      </button>
+
+      <div class="modal-divider">or</div>
+      <div id="google-btn-signup" class="google-btn-container"></div>
+      <p class="modal-switch">Already have an account? <a id="switch-to-login">Log in →</a></p>
+    </div>
+  </div>
+
+  <!-- ═══ TOAST ═══ -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ═══════════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════════ -->
+  <main>
+
+    <!-- HERO -->
+    <div class="hero" id="hero">
+      <svg class="hero-aperture" viewBox="0 0 400 400" aria-hidden="true"
+        style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:640px;max-width:none;opacity:.55;pointer-events:none;z-index:0">
+        <circle cx="200" cy="200" r="190" fill="none" stroke="rgba(227,163,68,0.10)" stroke-width="1" />
+        <circle cx="200" cy="200" r="150" fill="none" stroke="rgba(227,163,68,0.08)" stroke-width="1" />
+        <circle cx="200" cy="200" r="110" fill="none" stroke="rgba(111,151,236,0.07)" stroke-width="1" />
+        <g stroke="rgba(227,163,68,0.16)" stroke-width="1">
+          <line x1="200" y1="6" x2="200" y2="26" />
+          <line x1="200" y1="374" x2="200" y2="394" />
+          <line x1="6" y1="200" x2="26" y2="200" />
+          <line x1="374" y1="200" x2="394" y2="200" />
+        </g>
+      </svg>
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Powered by Gemini AI &amp; Groq
+      </div>
+      <h1>Ace Every Interview<br>with <em class="grad">SkillLens AI</em></h1>
+      <p class="hero-sub">Practice HR and technical interviews. Get real-time AI feedback, track your growth, and walk
+        into every interview with complete confidence.</p>
+      <div class="hero-btns">
+        <button class="btn-cta" id="hero-cta-signup">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            aria-hidden="true">
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+          Start practicing free
+        </button>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num" data-target="2847" data-sfx="+">0</div>
+          <div class="stat-lbl">Students practicing</div>
+        </div>
+        <div>
+          <div class="stat-num" data-target="94" data-sfx="%">0</div>
+          <div class="stat-lbl">Satisfaction rate</div>
+        </div>
+        <div>
+          <div class="stat-num" data-target="4" data-sfx=".8 ★">0</div>
+          <div class="stat-lbl">Average rating</div>
+        </div>
+        <div>
+          <div class="stat-num" data-target="6120" data-sfx="+">0</div>
+          <div class="stat-lbl">Interviews practiced</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="section-wrap" id="about">
+      <p class="eyebrow reveal">About SkillLens AI</p>
+      <h2 class="section-title reveal">Your Personal AI Interview<br>Preparation Platform</h2>
+      <p class="section-sub reveal" style="max-width:680px">SkillLens AI is an AI-powered interview preparation platform
+        designed to help students and job seekers improve their interview performance through intelligent feedback,
+        resume analysis, technical interview preparation, and performance tracking. The platform provides a structured
+        learning journey from resume building to final interview readiness.</p>
+      <div class="about-highlights reveal">
+        <span class="about-pill">AI Resume Analysis</span>
+        <span class="about-pill">HR Interview Practice</span>
+        <span class="about-pill">Technical Interview Simulation</span>
+        <span class="about-pill">Voice Interview Analysis</span>
+        <span class="about-pill">AI Feedback Engine</span>
+        <span class="about-pill">Performance Analytics</span>
+        <span class="about-pill">Progress Tracking</span>
+      </div>
+      <div class="about-grid">
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="fc-icon ic-blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg></div>
+          <h3>Resume Intelligence</h3>
+          <p>AI reads your resume like a recruiter would — scoring ATS compatibility, flagging missing skills, and
+            surfacing concrete ways to strengthen it.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="fc-icon ic-purple"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg></div>
+          <h3>Interview Preparation</h3>
+          <p>Practice HR and technical rounds in realistic simulated sessions, with every answer evaluated instantly by
+            AI.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="fc-icon ic-amber"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg></div>
+          <h3>Performance Tracking</h3>
+          <p>Every session feeds your analytics dashboard — see trends, strong and weak categories, and measurable
+            improvement over time.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-4">
+          <div class="fc-icon ic-green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
+            </svg></div>
+          <h3>Career Growth</h3>
+          <p>A structured journey from resume to offer — designed to build real, lasting interview confidence, not just
+            quick tips.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="section-wrap" id="features">
+      <p class="eyebrow reveal">Platform features</p>
+      <h2 class="section-title reveal">Everything you need to<br>land your dream role</h2>
+      <p class="section-sub reveal">Six AI-powered modules covering every stage of your interview preparation journey.
+      </p>
+      <div class="features-grid">
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="fc-icon ic-blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg></div>
+          <h3>Resume Analyzer</h3>
+          <p>Upload your resume and receive an instant ATS score, missing skills detection, and AI-powered improvement
+            suggestions tailored to your target role.</p>
+          <span class="fc-tag">ATS Optimized</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="fc-icon ic-purple"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg></div>
+          <h3>HR Interview Simulator</h3>
+          <p>Choose from General HR, Behavioral, Situational, or Mixed rounds, and get instant AI feedback on your
+            answers.</p>
+          <span class="fc-tag">4 Round Types</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="fc-icon ic-cyan"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" aria-hidden="true">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg></div>
+          <h3>Technical Interview Simulator</h3>
+          <p>Prepare for DSA, OOP, DBMS, OS, CN, and Web Development with adaptive question banks and AI-powered
+            evaluation.</p>
+          <span class="fc-tag">6 Categories</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-4">
+          <div class="fc-icon ic-green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4l3 3" />
+            </svg></div>
+          <h3>AI Feedback Engine</h3>
+          <p>Receive detailed feedback scoring communication, clarity, confidence, and technical accuracy — with
+            specific improvement suggestions.</p>
+          <span class="fc-tag">Real-time</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-5">
+          <div class="fc-icon ic-amber"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg></div>
+          <h3>Performance Analytics</h3>
+          <p>Track scores over time, identify weak categories, and visualise improvement trends through interactive
+            charts and downloadable reports.</p>
+          <span class="fc-tag">Visual Insights</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-6">
+          <div class="fc-icon ic-red"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" aria-hidden="true">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg></div>
+          <h3>Voice Interview Analysis</h3>
+          <p>Speak your HR interview answers instead of typing. Your actual recording is analyzed for pace,
+            vocal confidence, filler words, and clarity — on top of live speech-to-text as you talk.</p>
+          <span class="fc-tag">Gemini Voice AI</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="section-wrap" id="how">
+      <p class="eyebrow reveal">How it works</p>
+      <h2 class="section-title reveal">From upload to offer in<br>four simple steps</h2>
+      <p class="section-sub reveal">Our AI guides you through every stage — no guesswork, just structured improvement.
+      </p>
+      <div class="steps-row">
+        <div class="step reveal reveal-delay-1">
+          <div class="step-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa"
+              stroke-width="2.5" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg></div>
+          <h4>Upload resume</h4>
+          <p>SkillLens AI personalises every session to your profile, skills, and target role.</p>
+        </div>
+        <div class="step reveal reveal-delay-2">
+          <div class="step-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa"
+              stroke-width="2.5" aria-hidden="true">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            </svg></div>
+          <h4>Practice interviews</h4>
+          <p>Answer real-world questions across HR and technical rounds at your own pace.</p>
+        </div>
+        <div class="step reveal reveal-delay-3">
+          <div class="step-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa"
+              stroke-width="2.5" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4l3 3" />
+            </svg></div>
+          <h4>Receive AI feedback</h4>
+          <p>Instant, detailed scoring on communication, accuracy, structure, and confidence.</p>
+        </div>
+        <div class="step reveal reveal-delay-4">
+          <div class="step-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa"
+              stroke-width="2.5" aria-hidden="true">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
+            </svg></div>
+          <h4>Track &amp; improve</h4>
+          <p>Monitor trends, find weak areas, and keep levelling up until you land the offer.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD PREVIEW -->
+    <div class="section-wrap" id="preview" style="padding-top:0">
+      <p class="eyebrow reveal">Dashboard preview</p>
+      <h2 class="section-title reveal">Your command centre,<br>all in one place</h2>
+      <p class="section-sub reveal">A live snapshot of your progress — interviews taken, scores earned, and improvement
+        trends at a glance.</p>
+      <div class="dash-preview reveal">
+        <div class="dp-chrome">
+          <div class="chrome-dot c-red"></div>
+          <div class="chrome-dot c-yellow"></div>
+          <div class="chrome-dot c-green"></div>
+          <span class="chrome-title">SkillLens AI — Dashboard</span>
+          <span class="dp-example-tag" id="dp-example-tag">Example</span>
+        </div>
+        <div class="dp-body">
+          <div class="dp-welcome" id="dp-welcome">Welcome back, Priya 👋</div>
+          <div class="dp-tagline" id="dp-tagline">You're on a 5-day streak — keep it going!</div>
+          <div class="dp-stats">
+            <div class="dp-stat">
+              <div class="dp-stat-icon">🎙️</div>
+              <div class="dp-stat-val c-b" id="dp-stat-interviews">27</div>
+              <div class="dp-stat-lbl">Interviews taken</div>
+            </div>
+            <div class="dp-stat">
+              <div class="dp-stat-icon">⭐</div>
+              <div class="dp-stat-val c-p" id="dp-stat-avg">78%</div>
+              <div class="dp-stat-lbl">Average score</div>
+            </div>
+            <div class="dp-stat">
+              <div class="dp-stat-icon">📄</div>
+              <div class="dp-stat-val c-g" id="dp-stat-resume">82</div>
+              <div class="dp-stat-lbl">Resume score</div>
+            </div>
+            <div class="dp-stat">
+              <div class="dp-stat-icon">📈</div>
+              <div class="dp-stat-val c-a" id="dp-stat-improvement">+14%</div>
+              <div class="dp-stat-lbl">Improvement rate</div>
+            </div>
+          </div>
+          <div class="dp-actions">
+            <div class="dp-action">
+              <div class="dp-action-icon c-b">👥</div>
+              <div class="dp-action-lbl">Start HR interview</div>
+              <div class="dp-action-sub">Behavioral &amp; situational</div>
+            </div>
+            <div class="dp-action">
+              <div class="dp-action-icon c-p">💻</div>
+              <div class="dp-action-lbl">Start technical interview</div>
+              <div class="dp-action-sub">DSA, OOP, DBMS &amp; more</div>
+            </div>
+            <div class="dp-action">
+              <div class="dp-action-icon c-g">📋</div>
+              <div class="dp-action-lbl">Analyze resume</div>
+              <div class="dp-action-sub">Get your ATS score</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEVELOPER -->
+    <div class="dev-section" id="developer">
+      <p class="eyebrow reveal">Meet the creator</p>
+      <h2 class="section-title reveal">Meet the Creator</h2>
+      <p class="section-sub reveal" style="margin-bottom:38px">Built with passion by a CS student and developer who wanted
+        a smarter way to prepare for placements — so he built one.</p>
+      <div class="dev-grid">
+        <a href="https://github.com/Arjunuk1" target="_blank" rel="noopener noreferrer"
+          class="dev-card gh reveal reveal-delay-1">
+          <div class="dev-icon di-gh"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" aria-hidden="true">
+              <path
+                d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+            </svg></div>
+          <h4>GitHub</h4>
+          <p>View source code, projects, and open-source contributions</p>
+          <div class="dev-handle" style="color:#a78bfa">@Arjunuk1</div>
+          <div class="dev-arrow">View profile →</div>
+        </a>
+        <a href="https://www.linkedin.com/in/arjunsharma-cse/" target="_blank" rel="noopener noreferrer"
+          class="dev-card li reveal reveal-delay-2">
+          <div class="dev-icon di-li"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" aria-hidden="true">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+              <rect x="2" y="9" width="4" height="12" />
+              <circle cx="4" cy="4" r="2" />
+            </svg></div>
+          <h4>LinkedIn</h4>
+          <p>Connect professionally — open to opportunities and collaborations</p>
+          <div class="dev-handle" style="color:#60a5fa">Arjun Sharma · CSE</div>
+          <div class="dev-arrow">Connect →</div>
+        </a>
+        <a href="mailto:arjun251898@gmail.com" class="dev-card em reveal reveal-delay-3">
+          <div class="dev-icon di-em"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" aria-hidden="true">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg></div>
+          <h4>Email</h4>
+          <p>Reach out for project feedback, hiring queries, or collaboration ideas</p>
+          <div class="dev-handle" style="color:#22d3ee">arjun251898@gmail.com</div>
+          <div class="dev-arrow">Send email →</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <div class="cta-card reveal">
+        <h2>Ready to Land Your<br>Dream Job?</h2>
+        <p>Practice smarter, improve faster, and build interview confidence with SkillLens AI. Join 12,000+ students
+          already preparing.</p>
+        <div class="cta-btns">
+          <button class="btn-cta" id="cta-signup-btn">Start practicing free</button>
+          <button class="btn-outline" id="cta-login-btn">Log in</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer-wrap">
+      <footer>
+        <div class="footer-row">
+          <div class="footer-brand">
+            <div class="nav-mark">SL</div>
+            SkillLens AI
+          </div>
+          <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-socials">
+            <a href="https://github.com/Arjunuk1" target="_blank" rel="noopener noreferrer" class="soc-btn"
+              aria-label="GitHub">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)"
+                stroke-width="2">
+                <path
+                  d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+              </svg>
+            </a>
+            <a href="https://www.linkedin.com/in/arjunsharma-cse/" target="_blank" rel="noopener noreferrer"
+              class="soc-btn" aria-label="LinkedIn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)"
+                stroke-width="2">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                <rect x="2" y="9" width="4" height="12" />
+                <circle cx="4" cy="4" r="2" />
+              </svg>
+            </a>
+            <a href="mailto:arjun251898@gmail.com" class="soc-btn" aria-label="Email">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)"
+                stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+            </a>
+          </div>
+        </div>
+        <p class="footer-copy">© 2026 SkillLens AI &nbsp;·&nbsp; Built by Arjun Sharma &nbsp;·&nbsp; All rights reserved
+        </p>
+      </footer>
+    </div>
+
+  </main>
+
+  <script src="landing.js"></script>
+</body>
+
+</html>

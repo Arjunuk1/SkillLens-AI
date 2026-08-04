@@ -41,38 +41,11 @@ const deleteQuestion = async (req, res, next) => {
 const seedQuestions = async (req, res, next) => {
   try {
     const count = await Question.countDocuments();
-    if (count > 0) return res.json({ success: true, message: `Database already has ${count} questions` });
-
-    const SEED = [
-      // HR
-      { type:'hr', category:'Behavioral', difficulty:'medium', text:'Tell me about yourself.' },
-      { type:'hr', category:'Behavioral', difficulty:'medium', text:'Describe a time you led a team.' },
-      { type:'hr', category:'Situational', difficulty:'medium', text:'How do you handle tight deadlines?' },
-      { type:'hr', category:'HR', difficulty:'easy', text:'Why do you want this role?' },
-      { type:'hr', category:'HR', difficulty:'easy', text:'Where do you see yourself in 5 years?' },
-      // Technical - DSA
-      { type:'technical', category:'DSA', difficulty:'medium', text:'Explain BFS vs DFS with use cases.' },
-      { type:'technical', category:'DSA', difficulty:'hard',   text:'What is Dynamic Programming? Solve Fibonacci with memoization.' },
-      { type:'technical', category:'DSA', difficulty:'medium', text:'What is the time complexity of binary search?' },
-      // Technical - DBMS
-      { type:'technical', category:'DBMS', difficulty:'medium', text:'Explain normalisation and its forms (1NF, 2NF, 3NF).' },
-      { type:'technical', category:'DBMS', difficulty:'hard',   text:'What are ACID properties? Why are they important?' },
-      // Technical - OOP
-      { type:'technical', category:'OOP', difficulty:'easy',   text:'What are the four pillars of OOP?' },
-      { type:'technical', category:'OOP', difficulty:'medium', text:'Explain method overloading vs overriding.' },
-      // Technical - OS
-      { type:'technical', category:'OS', difficulty:'medium', text:'What is a deadlock? How can it be prevented?' },
-      { type:'technical', category:'OS', difficulty:'medium', text:'Explain the difference between process and thread.' },
-      // Technical - CN
-      { type:'technical', category:'CN', difficulty:'medium', text:'What is the OSI model? Explain each layer briefly.' },
-      { type:'technical', category:'CN', difficulty:'easy',   text:'What is the difference between TCP and UDP?' },
-      // Technical - Web
-      { type:'technical', category:'Web Development', difficulty:'medium', text:'Explain the JavaScript event loop.' },
-      { type:'technical', category:'Web Development', difficulty:'easy',   text:'What are HTTP status codes? List common ones.' },
-    ];
-
-    await Question.insertMany(SEED);
-    res.json({ success: true, message: `Seeded ${SEED.length} questions` });
+    res.json({
+      success: true,
+      message: 'Static seeding is deprecated. Interview questions are generated live by Groq at session start.',
+      existingQuestions: count,
+    });
   } catch (err) { next(err); }
 };
 

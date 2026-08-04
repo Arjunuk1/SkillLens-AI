@@ -13,6 +13,26 @@ const getClient = () => {
 };
 
 const MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
+const parseKeyList = (value) => (value || '')
+  .split(/[\s,;]+/)
+  .map((key) => key.trim())
+  .filter(Boolean);
+
+const GROQ_API_KEYS = parseKeyList(process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY);
+let groqKeyCursor = 0;
+
+const getCurrentGroqKey = () => {
+  if (!GROQ_API_KEYS.length) throw new Error('GROQ_API_KEYS not set in .env');
+  return GROQ_API_KEYS[groqKeyCursor % GROQ_API_KEYS.length];
+};
+
+const advanceGroqKey = () => {
+  if (!GROQ_API_KEYS.length) throw new Error('GROQ_API_KEYS not set in .env');
+  groqKeyCursor = (groqKeyCursor + 1) % GROQ_API_KEYS.length;
+};
 
 const safeJSON = (text) => {
   try {
@@ -21,10 +41,65 @@ const safeJSON = (text) => {
   } catch { return null; }
 };
 
-// Wraps a Gemini call with clear, specific error messages instead of a
-// generic failure, so problems show up in logs instead of masquerading as
-// a fake "AI said 50" score.
-const callGemini = async (prompt) => {
+const groqErrorMessage = (response, body) => body?.error?.message || body?.message || `Groq request failed with status ${response.status}`;
+
+const isGroqKeyError = (response, message) => {
+  const text = String(message || '').toLowerCase();
+  return [401, 403, 429].includes(response.status) || text.includes('quota') || text.includes('rate limit') || text.includes('invalid') || text.includes('unauthorized');
+};
+
+const callGroq = async (prompt) => {
+  if (!GROQ_API_KEYS.length) throw new Error('GROQ_API_KEYS not set in .env');
+
+  let lastError = null;
+  for (let attempt = 0; attempt < GROQ_API_KEYS.length; attempt++) {
+    const apiKey = getCurrentGroqKey();
+    try {
+      const response = await fetch(GROQ_API_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: GROQ_MODEL,
+          messages: [
+            { role: 'system', content: 'Return only valid JSON. No markdown, no commentary.' },
+            { role: 'user', content: prompt },
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.2,
+        }),
+      });
+
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message = groqErrorMessage(response, body);
+        if (isGroqKeyError(response, message) && attempt < GROQ_API_KEYS.length - 1) {
+          lastError = new Error(message);
+          advanceGroqKey();
+          continue;
+        }
+        throw new Error(message);
+      }
+
+      const text = body?.choices?.[0]?.message?.content?.trim();
+      if (!text) throw new Error('Groq returned an empty response');
+      const parsed = safeJSON(text);
+      if (!parsed) throw new Error('Could not parse Groq JSON response');
+      return parsed;
+    } catch (e) {
+      lastError = e;
+      break;
+    }
+  }
+
+  throw new Error(`Groq request failed: ${lastError?.message || 'unknown error'}`);
+};
+
+// Wraps the Gemini call with a Groq fallback so AI failures degrade to a
+// second provider instead of masquerading as a fake "AI said 50" score.
+const callGeminiPrimary = async (prompt) => {
   const ai = getClient();
   let response;
   try {
@@ -58,6 +133,22 @@ const callGemini = async (prompt) => {
   const parsed = safeJSON(text);
   if (!parsed) throw new Error('Could not parse Gemini JSON response');
   return parsed;
+};
+
+const callGemini = async (prompt, groqPrompt = null) => {
+  try {
+    return await callGeminiPrimary(prompt);
+  } catch (geminiError) {
+    const fallbackPrompt = groqPrompt || (typeof prompt === 'string' ? prompt : null);
+    if (!fallbackPrompt) throw geminiError;
+
+    console.warn(`Gemini failed, falling back to Groq: ${geminiError.message}`);
+    try {
+      return await callGroq(fallbackPrompt);
+    } catch (groqError) {
+      throw new Error(`Gemini failed (${geminiError.message}); Groq fallback failed (${groqError.message})`);
+    }
+  }
 };
 
 // ── Resume Analysis ──────────────────────────────────────────────────────────
@@ -95,7 +186,7 @@ ${resumeText.substring(0, 6000)}`;
 const evaluateAnswerWithGemini = async (question, answer, type = 'hr') => {
   const prompt = `You are an expert ${type === 'hr' ? 'HR interviewer' : 'technical interviewer'}. Evaluate this interview answer carefully and return ONLY JSON (no markdown, no commentary):
 {
-  "score": <number 0-100, be genuinely discriminating based on answer quality; an empty or off-topic answer should score under 20>,
+  "score": <number 0-100>,
   "clarity": <number 0-100>,
   "confidence": <number 0-100>,
   "structure": <number 0-100>,
@@ -105,6 +196,7 @@ const evaluateAnswerWithGemini = async (question, answer, type = 'hr') => {
   "suggestions": ["suggestion1","suggestion2"],
   "idealAnswer": "<brief ideal answer>"
 }
+Score factual correctness and whether the answer addresses what the question asks—never answer length, writing style, or similarity to an ideal-answer phrasing. A short, direct answer that is fully correct must receive 100/100 when the question can be fully answered briefly. Accept alternate terminology, valid examples, and equivalent explanations. Only deduct for a genuine factual error or for an explicitly requested part of the question that is missing. Use this rubric: 90-100 = fully correct; 80-89 = correct with a minor omission only when the question explicitly requires more detail; 40-79 = partly correct; 1-39 = substantially incorrect or off-topic; 0 = no answer. Never award points for an empty or whitespace-only answer.
 Question: ${question}
 Candidate's Answer: ${answer && answer.trim() ? answer.substring(0, 3000) : '(no answer provided)'}`;
 
@@ -154,6 +246,151 @@ Question: ${question}`;
   return typeof parsed.hint === 'string' ? parsed.hint : 'Think through the core concept step by step.';
 };
 
+const shuffleArray = (arr) => {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
+
+const cycleValues = (values, count) => Array.from({ length: count }, (_, index) => values[index % values.length]);
+
+const normalizeQuestionText = (text) => (typeof text === 'string' ? text.trim().replace(/\s+/g, ' ') : '');
+
+const validateGroqQuestion = (question, blueprint, mode) => {
+  if (!question || typeof question !== 'object') return null;
+
+  const normalized = {
+    slot: Number.isInteger(question.slot) ? question.slot : blueprint.slot,
+    text: normalizeQuestionText(question.text),
+    category: typeof question.category === 'string' && question.category.trim() ? question.category.trim() : blueprint.category,
+    difficulty: typeof question.difficulty === 'string' && question.difficulty.trim() ? question.difficulty.trim() : blueprint.difficulty,
+    qType: typeof question.qType === 'string' && question.qType.trim() ? question.qType.trim() : blueprint.qType,
+    tags: Array.isArray(question.tags) ? question.tags.map((tag) => String(tag).trim()).filter(Boolean) : [],
+  };
+
+  if (!normalized.text) return null;
+  if (mode === 'hr') {
+    normalized.qType = 'short';
+    return normalized;
+  }
+
+  if (!['mcq', 'short', 'scenario'].includes(normalized.qType)) return null;
+
+  if (normalized.qType === 'mcq') {
+    const options = Array.isArray(question.options) ? question.options.map((option) => String(option).trim()).filter(Boolean) : [];
+    if (options.length < 4) return null;
+    const correctIndex = Number.isInteger(question.correctIndex) ? question.correctIndex : parseInt(question.correctIndex, 10);
+    if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= options.length) return null;
+    normalized.options = options.slice(0, 4);
+    normalized.correctIndex = correctIndex;
+    normalized.tags = normalized.tags.length ? normalized.tags : [normalized.category, 'mcq'];
+  } else {
+    normalized.tags = normalized.tags.length ? normalized.tags : [normalized.category, normalized.qType];
+  }
+
+  return normalized;
+};
+
+const buildHrBlueprints = ({ category, difficulty, count }) => {
+  const categories = category === 'mixed'
+    ? cycleValues(shuffleArray(['HR', 'Behavioral', 'Situational']), count)
+    : Array(count).fill(category);
+  const difficulties = difficulty === 'mixed'
+    ? cycleValues(shuffleArray(['easy', 'medium', 'hard']), count)
+    : Array(count).fill(difficulty);
+
+  return Array.from({ length: count }, (_, index) => ({
+    slot: index + 1,
+    category: categories[index],
+    difficulty: difficulties[index],
+    qType: 'short',
+  }));
+};
+
+const buildTechnicalBlueprints = ({ category, difficulty, count }) => {
+  const mcqCount = Math.max(1, Math.round(count * 0.4));
+  const scenarioCount = Math.max(0, Math.round(count * 0.2));
+  const shortCount = Math.max(0, count - mcqCount - scenarioCount);
+
+  const qTypes = shuffleArray([
+    ...Array(mcqCount).fill('mcq'),
+    ...Array(shortCount).fill('short'),
+    ...Array(scenarioCount).fill('scenario'),
+  ]).slice(0, count);
+
+  const difficulties = difficulty === 'mixed'
+    ? cycleValues(shuffleArray(['easy', 'medium', 'hard']), count)
+    : Array(count).fill(difficulty);
+
+  return Array.from({ length: count }, (_, index) => ({
+    slot: index + 1,
+    category,
+    difficulty: difficulties[index],
+    qType: qTypes[index],
+  }));
+};
+
+const buildQuestionPrompt = ({ mode, blueprints, targetRole }) => {
+  const domain = mode === 'hr' ? 'HR / behavioral / situational' : 'technical';
+  const modeRules = mode === 'hr'
+    ? 'Every question must be a short-answer interview question. Do not include options or correctIndex.'
+    : 'For mcq questions, include exactly 4 options and a valid correctIndex. For short/scenario questions, do not include options or correctIndex.';
+
+  return `Generate EXACTLY ${blueprints.length} ${domain} interview questions as strict JSON.
+Return only this shape:
+{ "questions": [ { "slot": 1, "text": "...", "category": "...", "difficulty": "...", "qType": "...", "tags": ["..."], "options": ["..."], "correctIndex": 0 } ] }
+
+Blueprints to follow exactly:
+${JSON.stringify(blueprints, null, 2)}
+
+Rules:
+- Match every blueprint slot, category, difficulty, and qType exactly.
+- Keep the questions realistic, non-duplicative, and specific to a live interview.
+- If ${mode === 'hr' ? 'the category is mixed, vary HR, Behavioral, and Situational naturally' : 'the difficulty is mixed, vary easy, medium, and hard naturally'}.
+- ${modeRules}
+- Keep phrasing concise enough for a live interview.
+- If a target role is provided, tailor relevance to it: ${targetRole ? targetRole : '(none)'}.
+- Return JSON only, with no markdown, no code fences, and no commentary.`;
+};
+
+const generateGroqQuestionSet = async ({ mode, category, difficulty, count, targetRole = '' }) => {
+  const safeCount = Math.max(1, Math.min(30, parseInt(count, 10) || 0));
+  const blueprints = mode === 'hr'
+    ? buildHrBlueprints({ category, difficulty, count: safeCount })
+    : buildTechnicalBlueprints({ category, difficulty, count: safeCount });
+
+  let lastError = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const parsed = await callGroq(buildQuestionPrompt({ mode, blueprints, targetRole }));
+      const questions = Array.isArray(parsed?.questions) ? parsed.questions : [];
+      const orderedQuestions = [...questions].sort((left, right) => {
+        const leftSlot = Number.isInteger(left?.slot) ? left.slot : parseInt(left?.slot, 10) || 0;
+        const rightSlot = Number.isInteger(right?.slot) ? right.slot : parseInt(right?.slot, 10) || 0;
+        return leftSlot - rightSlot;
+      });
+      const normalized = questions
+        .map((question, index) => validateGroqQuestion((orderedQuestions[index] || question), blueprints[index] || blueprints[0], mode))
+        .filter(Boolean)
+        .slice(0, safeCount);
+
+      if (normalized.length !== safeCount) {
+        throw new Error(`Groq returned ${normalized.length} valid questions, expected ${safeCount}`);
+      }
+
+      return normalized.map((question, index) => ({ ...question, slot: index + 1 }));
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw new Error(`Could not generate interview questions with Groq: ${lastError?.message || 'unknown error'}`);
+};
+
 // ── HR / Behavioral Answer Evaluation (STAR method) ───────────────────────────
 const VOCAL_DELIVERY_SCHEMA = `,
   "vocalDelivery": {
@@ -176,7 +413,7 @@ const evaluateHRAnswerWithGemini = async (question, answer, targetRole = '', aud
 
   const promptText = `You are an expert HR interviewer trained in the STAR method (Situation, Task, Action, Result).${audio ? ' You have been given the candidate\'s ACTUAL VOICE RECORDING of their answer, not just a transcript - listen to it and evaluate both the content and how it was delivered vocally.' : ''} Evaluate this behavioral/HR interview answer carefully and return ONLY JSON (no markdown, no commentary):
 {
-  "score": <number 0-100, be genuinely discriminating; an empty or off-topic answer should score under 20>,
+  "score": <number 0-100>,
   "clarity": <number 0-100>,
   "confidence": <number 0-100>,
   "structure": <number 0-100>,
@@ -192,15 +429,41 @@ const evaluateHRAnswerWithGemini = async (question, answer, targetRole = '', aud
   "suggestions": ["suggestion1","suggestion2"],
   "idealAnswer": "<brief 2-3 sentence example of a strong STAR-structured answer to this question>"${audio ? VOCAL_DELIVERY_SCHEMA : ''}
 }
+Score factual correctness and whether the answer addresses what the question asks—never answer length, writing style, or similarity to a preferred STAR example. A short, direct answer that is fully correct must receive 100/100 when the question can be fully answered briefly. Accept alternate terminology, valid examples, and equivalent explanations. Only deduct for a genuine factual error or for an explicitly requested part of the question that is missing. Use this rubric: 90-100 = fully correct; 80-89 = correct with a minor omission only when the question explicitly requires more detail; 40-79 = partly correct; 1-39 = substantially incorrect or off-topic; 0 = no answer. Never award points for an empty or whitespace-only answer.
 ${roleContext}
 Question: ${question}
 ${audio ? 'The candidate\'s spoken answer is attached as audio.' : `Candidate's Answer: ${answer && answer.trim() ? answer.substring(0, 3000) : '(no answer provided)'}`}`;
+
+  const groqPromptText = audio
+    ? `You are an expert HR interviewer trained in the STAR method (Situation, Task, Action, Result). Evaluate this behavioral/HR interview answer carefully and return ONLY JSON (no markdown, no commentary):
+{
+  "score": <number 0-100>,
+  "clarity": <number 0-100>,
+  "confidence": <number 0-100>,
+  "structure": <number 0-100>,
+  "relevance": <number 0-100>,
+  "star": {
+    "situation": <number 0-100 - how clearly did they set up the context/background? 0 if not applicable/not attempted>,
+    "task": <number 0-100 - how clearly did they explain their specific responsibility/goal?>,
+    "action": <number 0-100 - how clearly did they explain the concrete steps THEY took?>,
+    "result": <number 0-100 - did they share a clear, ideally measurable outcome?>
+  },
+  "strengths": ["strength1","strength2"],
+  "weaknesses": ["weakness1","weakness2"],
+  "suggestions": ["suggestion1","suggestion2"],
+  "idealAnswer": "<brief 2-3 sentence example of a strong STAR-structured answer to this question>"
+}
+Score factual correctness and whether the answer addresses what the question asks—never answer length, writing style, or similarity to a preferred STAR example. A short, direct answer that is fully correct must receive 100/100 when the question can be fully answered briefly. Accept alternate terminology, valid examples, and equivalent explanations. Only deduct for a genuine factual error or for an explicitly requested part of the question that is missing. Use this rubric: 90-100 = fully correct; 80-89 = correct with a minor omission only when the question explicitly requires more detail; 40-79 = partly correct; 1-39 = substantially incorrect or off-topic; 0 = no answer. Never award points for an empty or whitespace-only answer.
+Question: ${question}
+Candidate's Answer: ${answer && answer.trim() ? answer.substring(0, 3000) : '(no answer provided)'}
+Note: the source system may have audio for this answer, but this fallback can only evaluate the text transcript, so do not include vocal-delivery fields.`
+    : promptText;
 
   const contents = audio
     ? [{ text: promptText }, { inlineData: { mimeType: audio.mimeType, data: audio.base64 } }]
     : promptText;
 
-  const parsed = await callGemini(contents);
+  const parsed = await callGemini(contents, groqPromptText);
   const star = parsed.star || {};
   const result = {
     score:       Math.min(100, Math.max(0, parseInt(parsed.score)))       || 0,
@@ -237,4 +500,4 @@ ${audio ? 'The candidate\'s spoken answer is attached as audio.' : `Candidate's 
   return result;
 };
 
-module.exports = { analyzeResumeWithGemini, evaluateAnswerWithGemini, evaluateHRAnswerWithGemini, generateFeedbackReport, generateHint };
+module.exports = { analyzeResumeWithGemini, evaluateAnswerWithGemini, evaluateHRAnswerWithGemini, generateFeedbackReport, generateHint, generateGroqQuestionSet };

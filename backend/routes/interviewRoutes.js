@@ -2,12 +2,13 @@ const express = require('express');
 const router  = express.Router();
 const { protect } = require('../middleware/auth');
 const {
-  startInterview, submitInterview, getHint, toggleBookmark,
+  startInterview, submitInterview, quitInterview, getHint, toggleBookmark,
   getBookmarks, getInterviewHistory, getInterviewById,
 } = require('../controllers/interviewController');
 
 router.post('/start',      protect, startInterview);
 router.post('/submit',     protect, submitInterview);
+router.post('/quit',       protect, quitInterview);
 router.post('/hint',       protect, getHint);
 router.post('/bookmark',   protect, toggleBookmark);
 router.get('/bookmarks',   protect, getBookmarks);

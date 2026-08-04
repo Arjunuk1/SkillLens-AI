@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Panel — SkillLens AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="topbar">
+  <a href="/pages/dashboard/dashboard.html" class="logo"><div class="logo-sq">SL</div>SkillLens AI<span class="admin-pill">ADMIN</span></a>
+  <div class="top-links"><a href="/pages/dashboard/dashboard.html">← Dashboard</a><a href="#" onclick="logout()">Logout</a></div>
+</div>
+
+<div class="page" id="page-content" style="display:none">
+  <h1>Admin Panel</h1>
+  <p class="sub">Manage the question bank, monitor users, and see real platform-wide performance data</p>
+
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card"><div class="stat-val" id="st-users">-</div><div class="stat-lbl">Total Users</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-interviews">-</div><div class="stat-lbl">Interviews Completed</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-questions">-</div><div class="stat-lbl">Active Questions</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-resumes">-</div><div class="stat-lbl">Resumes Analyzed</div></div>
+    <div class="stat-card"><div class="stat-val" id="st-avg">-</div><div class="stat-lbl">Platform Avg Score</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="overview" onclick="showTab('overview')">📊 Overview</div>
+    <div class="tab" data-tab="add" onclick="showTab('add')">➕ Add Question</div>
+    <div class="tab" data-tab="bulk" onclick="showTab('bulk')">📤 Upload Question Bank</div>
+    <div class="tab" data-tab="users" onclick="showTab('users')">👥 Users</div>
+    <div class="tab" data-tab="missed" onclick="showTab('missed')">📉 Most Missed Questions</div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="tabpanel active" id="tab-overview">
+    <div class="card">
+      <h3>📋 Category Breakdown</h3>
+      <table>
+        <thead><tr><th>Category</th><th>Interviews</th><th>Avg Score</th></tr></thead>
+        <tbody id="cat-breakdown-body"><tr><td colspan="3" class="empty">Loading...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>📈 Signups — Last 30 Days</h3>
+      <div id="signup-summary" style="font-size:13px;color:var(--muted)">Loading...</div>
+    </div>
+  </div>
+
+  <!-- ADD QUESTION -->
+  <div class="tabpanel" id="tab-add">
+    <div class="card">
+      <h3>➕ Add a Question</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Interview Type</label>
+          <select id="af-type"><option value="technical">Technical</option><option value="hr">HR</option></select>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="af-category">
+            <option>DSA</option><option>OOP</option><option>DBMS</option><option>OS</option><option>CN</option><option>Web Development</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Question Type</label>
+          <select id="af-qtype" onchange="toggleMcqFields()">
+            <option value="short">Short Answer</option><option value="mcq">Multiple Choice</option><option value="scenario">Scenario</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Difficulty</label>
+          <select id="af-difficulty"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select>
+        </div>
+        <div class="form-group full">
+          <label>Question Text</label>
+          <textarea id="af-text" placeholder="Type the question..."></textarea>
+        </div>
+        <div class="form-group full mcq-opts" id="mcq-opts-box">
+          <label>Options (mark the correct one)</label>
+          <div class="mcq-opt-row"><input type="radio" name="af-correct" value="0" checked><input type="text" class="mcq-opt-text" placeholder="Option A"></div>
+          <div class="mcq-opt-row"><input type="radio" name="af-correct" value="1"><input type="text" class="mcq-opt-text" placeholder="Option B"></div>
+          <div class="mcq-opt-row"><input type="radio" name="af-correct" value="2"><input type="text" class="mcq-opt-text" placeholder="Option C"></div>
+          <div class="mcq-opt-row"><input type="radio" name="af-correct" value="3"><input type="text" class="mcq-opt-text" placeholder="Option D"></div>
+        </div>
+        <div class="form-group full">
+          <label>Tags (comma-separated, optional)</label>
+          <input type="text" id="af-tags" placeholder="e.g. Sorting, Arrays">
+        </div>
+      </div>
+      <button class="btn" onclick="submitAddQuestion()">Add Question</button>
+      <div class="form-msg" id="add-msg"></div>
+    </div>
+  </div>
+
+  <!-- BULK UPLOAD -->
+  <div class="tabpanel" id="tab-bulk">
+    <div class="card">
+      <h3>📤 Upload Question Bank (JSON)</h3>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Paste an array of question objects. Each needs at minimum: type, category, text. For MCQs, also include qType:"mcq", options (array), and correctIndex.</p>
+      <textarea id="bulk-json" style="min-height:200px;font-family:monospace;font-size:12.5px" placeholder='[
+  { "type":"technical", "category":"DSA", "qType":"mcq", "text":"...", "options":["A","B","C","D"], "correctIndex":1, "difficulty":"easy", "tags":["Arrays"] },
+  { "type":"hr", "category":"HR", "text":"Tell me about a time you handled conflict." }
+]'></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn" onclick="submitBulkUpload()">Upload Question Bank</button>
+        <button class="btn-sec" onclick="loadTemplate()">Load Example Template</button>
+      </div>
+      <div class="form-msg" id="bulk-msg"></div>
+      <div id="bulk-errors"></div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div class="tabpanel" id="tab-users">
+    <div class="card">
+      <h3>👥 All Users</h3>
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Interviews</th><th>Resumes</th><th>Joined</th></tr></thead>
+        <tbody id="users-body"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MOST MISSED -->
+  <div class="tabpanel" id="tab-missed">
+    <div class="card">
+      <h3>📉 Most Missed Questions <span style="font-weight:400;color:var(--muted);font-size:12px">(across all users, real attempt data)</span></h3>
+      <table>
+        <thead><tr><th>Question</th><th>Category</th><th>Type</th><th>Attempts</th><th>Avg Score</th><th>Miss Rate</th></tr></thead>
+        <tbody id="missed-body"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="access-denied" id="access-denied" style="display:none">
+  <div class="ico">🔒</div>
+  <h2 style="margin-bottom:8px">Admin Access Required</h2>
+  <p style="color:var(--muted);font-size:14px">Your account doesn't have admin privileges. If you believe this is a mistake, contact the platform owner.</p>
+  <button class="btn-sec" style="margin-top:20px" onclick="location.href='/pages/dashboard/dashboard.html'">Back to Dashboard</button>
+</div>
+
+<script src="/assets/js/auth-guard.js"></script>
+<script src="admin.js"></script>
+</body></html>
