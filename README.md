@@ -106,7 +106,7 @@ POST /api/auth/register
 Content-Type: application/json
 
 {
-  "fullName": "Arjun Kumar",
+  "fullName": "Arjun",
   "email": "arjun@example.com",
   "password": "password123",
   "college": "IIT Delhi",
