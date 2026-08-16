@@ -226,7 +226,7 @@ Returns:
 
 ---
 
-## Build Order (as specified)
+## Build Order
 
 | Phase | Feature              | Status       |
 |-------|----------------------|--------------|
