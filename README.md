@@ -1,4 +1,4 @@
-# SkillLens AI — Backend
+# SkillLens AI -- AI-powered interview prep platform with resume analysis, mock interviews, and progress tracking. Built with Node.js, Express, MongoDB, and Gemini + Groq AI.
 
 Production-ready Node.js + Express + MongoDB backend for the SkillLens AI interview preparation platform.
 
